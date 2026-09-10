@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>UISTEEL — Concepts</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Mono&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    body { min-height: 100vh; margin: 0; display: grid; place-items: center; overflow: hidden; background: #101313; color: #f0f0e9; font-family: 'Space Grotesk', Arial, sans-serif; }
+    body::before { content: ''; position: fixed; inset: 0; opacity: .17; background: linear-gradient(90deg, transparent 49.9%, #fff 50%, transparent 50.1%), linear-gradient(0deg, transparent 49.9%, #fff 50%, transparent 50.1%); background-size: 64px 64px; mask-image: radial-gradient(circle at center, #000, transparent 75%); }
+    main { position: relative; width: min(920px, calc(100% - 40px)); padding: 56px 0; }
+    .eyebrow { margin: 0 0 18px; color: #ef4328; font: 12px/1.2 'DM Mono', monospace; letter-spacing: .08em; text-transform: uppercase; }
+    h1 { max-width: 700px; margin: 0 0 46px; font-size: clamp(46px, 8vw, 92px); line-height: .9; letter-spacing: -.07em; }
+    h1 em { color: #ef4328; font-style: normal; }
+    nav { display: grid; gap: 12px; }
+    a { display: flex; align-items: center; justify-content: space-between; min-height: 88px; padding: 20px 28px; border: 1px solid #505555; color: inherit; text-decoration: none; font-size: clamp(22px, 3vw, 34px); font-weight: 600; letter-spacing: -.04em; transition: background .2s, color .2s, transform .2s; }
+    a span { color: #929b99; font: 12px 'DM Mono', monospace; letter-spacing: .04em; }
+    a:hover, a:focus-visible { background: #ef4328; border-color: #ef4328; color: #111; transform: translateX(10px); outline: none; }
+    a:hover span, a:focus-visible span { color: #111; }
+    footer { margin-top: 55px; color: #929b99; font: 11px 'DM Mono', monospace; letter-spacing: .06em; text-transform: uppercase; }
+    @media (max-width: 520px) { main { padding: 40px 0; } a { min-height: 76px; padding: 18px; } }
+  </style>
+</head>
+<body>
+  <main>
+    <p class="eyebrow">UISTEEL / website directions</p>
+    <h1>Choose a <em>concept.</em></h1>
+    <nav aria-label="Concepts">
+      <a href="concept-01/"><span>01 / 03</span> Concept 1 <span>↗</span></a>
+      <a href="concept-02/"><span>02 / 03</span> Concept 2 <span>↗</span></a>
+      <a href="concept-03/"><span>03 / 03</span> Concept 3 <span>↗</span></a>
+    </nav>
+    <footer>Casablanca, Morocco · Structural steel systems</footer>
+  </main>
+</body>
+</html>
