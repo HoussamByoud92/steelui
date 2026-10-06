@@ -75,3 +75,8 @@ img[src*="11.11.55"]{content:url('../../assets/higgsfield/custom-sections.png')}
 @media(max-width:760px){.project-grid{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:none;grid-auto-rows:clamp(135px,39vw,220px);grid-auto-flow:dense}.project-card:nth-child(n){grid-column:auto;grid-row:auto}.project-card:first-child,.project-card:nth-child(6),.project-card:nth-child(9){grid-column:span 2}.project-card span{left:12px;right:8px;bottom:12px;font-size:9px}.editorial-extension{grid-template-columns:1fr;gap:24px;padding:76px 7%}.extension-details{grid-template-columns:1fr}.extension-details article,.extension-details article+article{padding:20px 0;border-right:0;border-bottom:1px solid #aaa39a}.extension-details article:last-child{border-bottom:0}.extension-dark .extension-details article{border-color:#55514c}.extension-details h3{margin:12px 0 7px}}
 
 @media(min-width:761px) and (max-width:1000px){.extension-details{grid-template-columns:1fr}.extension-details article,.extension-details article+article{padding:18px 0;border-right:0;border-bottom:1px solid #aaa39a}.extension-details article:last-child{border-bottom:0}.extension-dark .extension-details article{border-color:#55514c}}
+
+/* Keyboard focus and reduced-motion support. */
+:where(a,button,input,textarea):focus-visible{outline:2px solid #ed788b;outline-offset:4px}
+.site-nav .links a[aria-current="page"]{color:#fff}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
