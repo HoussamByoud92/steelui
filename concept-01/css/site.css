@@ -34,3 +34,8 @@ body{background:var(--coal);color:#f7f5f0}.site-nav{height:86px;position:absolut
 
 /* Deployment-safe fallbacks: existing published campaign assets replace private local source-photo paths. */
 img[src*="11.11.55"]{content:url('../../assets/higgsfield/custom-sections.png')}.split img[src*="11.11.27"]{content:url('../../assets/higgsfield/custom-sections.png')}.project-card img[src*="11.10.59"]{content:url('../../assets/higgsfield/mill-inspector.png')}.project-card img[src*="11.11.27"]{content:url('../../assets/higgsfield/custom-sections.png')}.project-card img[src*="11.12.28"]{content:url('../../assets/higgsfield/rebar-product.png')}.project-card img[src*="11.12.52"]{content:url('../../assets/higgsfield/wire-mesh-product.png')}.split img[src*="11.14.11"]{content:url('../../assets/higgsfield/mill-inspector.png')}
+
+/* Home hero: preserve the dark text field at left and let the mill video read clearly at right. */
+.hero-home:after{background:linear-gradient(90deg,#080808ef 0%,#080808a6 42%,transparent 100%),linear-gradient(0deg,#080808c5,transparent 62%)}
+
+@media(max-width:760px){.site-nav.open .links{display:flex;position:absolute;top:74px;left:0;right:0;padding:22px;background:#101010;flex-direction:column;gap:18px;border:1px solid var(--line);border-top:0}.site-nav.open .links a{font-size:12px}.menu-toggle{border:0;cursor:pointer}}

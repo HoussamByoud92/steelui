@@ -1,5 +1,7 @@
 document.querySelectorAll('.reveal').forEach(el=>new IntersectionObserver(([entry],observer)=>{if(entry.isIntersecting){el.classList.add('in');observer.disconnect()}},{threshold:.12}).observe(el));
-document.querySelectorAll('.menu-toggle').forEach(button=>button.addEventListener('click',()=>{const nav=button.parentElement;nav.classList.toggle('open');}));
+document.querySelectorAll('.menu-toggle').forEach(button=>button.addEventListener('click',()=>{const nav=button.parentElement;const open=nav.classList.toggle('open');button.setAttribute('aria-expanded',String(open));}));
+document.querySelectorAll('.site-nav .links a').forEach(link=>link.addEventListener('click',()=>{const nav=link.closest('.site-nav');nav.classList.remove('open');nav.querySelector('.menu-toggle')?.setAttribute('aria-expanded','false')}));
+document.addEventListener('keydown',event=>{if(event.key==='Escape')document.querySelectorAll('.site-nav.open').forEach(nav=>{nav.classList.remove('open');nav.querySelector('.menu-toggle')?.setAttribute('aria-expanded','false')})});
 
 const pinboard=document.querySelector('.pinboard');
 if(pinboard){
