@@ -24,13 +24,83 @@ if(visualIndex){
   const action=visualIndex.querySelector('.button');
   const viewport=document.createElement('div');
   const track=document.createElement('div');
+  const meta=document.createElement('div');
   const hint=document.createElement('p');
-  viewport.className='carousel-viewport';track.className='carousel-track';hint.className='drag-hint';hint.textContent='Glisser pour explorer';
-  tiles.forEach(tile=>track.append(tile));viewport.append(track);action.before(viewport);viewport.after(hint);visualIndex.classList.add('is-carousel');
-  let startX=0,currentX=0,offset=0,dragging=false;
-  const render=()=>track.style.transform=`translate3d(${offset+currentX}px,0,0)`;
-  viewport.addEventListener('pointerdown',event=>{dragging=true;startX=event.clientX;currentX=0;viewport.setPointerCapture(event.pointerId);viewport.classList.add('is-dragging')});
-  viewport.addEventListener('pointermove',event=>{if(!dragging)return;currentX=event.clientX-startX;render()});
-  const finish=event=>{if(!dragging)return;dragging=false;offset+=currentX;const max=Math.min(0,viewport.clientWidth-track.scrollWidth-16);offset=Math.max(max,Math.min(0,offset));currentX=0;render();viewport.classList.remove('is-dragging');if(viewport.hasPointerCapture(event.pointerId))viewport.releasePointerCapture(event.pointerId)};
-  viewport.addEventListener('pointerup',finish);viewport.addEventListener('pointercancel',finish);
+  const toggle=document.createElement('button');
+  const reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)');
+  viewport.className='carousel-viewport';
+  viewport.setAttribute('role','region');
+  viewport.setAttribute('aria-label','Galerie de photos UISTEEL');
+  viewport.tabIndex=0;
+  track.className='carousel-track';
+  meta.className='carousel-meta';
+  hint.className='drag-hint';
+  hint.textContent='Défilement automatique · Glisser pour explorer';
+  toggle.className='carousel-toggle';
+  toggle.type='button';
+  toggle.textContent='Ⅱ Pause';
+  toggle.setAttribute('aria-label','Mettre le carrousel en pause');
+  toggle.setAttribute('aria-pressed','false');
+  track.append(...tiles);
+  viewport.append(track);
+  meta.append(hint,toggle);
+  action.before(viewport);
+  viewport.after(meta);
+  visualIndex.classList.add('is-carousel');
+
+  let loopWidth=0,offset=0,startX=0,startOffset=0,dragging=false;
+  let hovered=false,focused=false,manuallyPaused=false,lastFrame=0;
+  const speed=34;
+  const wrap=value=>loopWidth?((value%loopWidth)+loopWidth)%loopWidth-loopWidth:0;
+  const render=()=>{track.style.transform=`translate3d(${offset}px,0,0)`};
+  const measure=()=>{
+    const firstSet=[...track.children].slice(0,tiles.length);
+    const gap=parseFloat(getComputedStyle(track).columnGap)||18;
+    loopWidth=firstSet.reduce((sum,tile)=>sum+tile.getBoundingClientRect().width,0)+gap*tiles.length;
+    offset=wrap(offset);
+    render();
+  };
+  if(!reducedMotion.matches){
+    const copies=tiles.map(tile=>{
+      const clone=tile.cloneNode(true);
+      clone.setAttribute('aria-hidden','true');
+      clone.querySelectorAll('img').forEach(img=>img.alt='');
+      return clone;
+    });
+    track.append(...copies);
+  }
+  const shouldMove=()=>!reducedMotion.matches&&!manuallyPaused&&!hovered&&!focused&&!dragging&&document.visibilityState==='visible';
+  const frame=now=>{
+    if(lastFrame&&shouldMove())offset=wrap(offset-(Math.min(now-lastFrame,50)/1000)*speed);
+    lastFrame=now;
+    render();
+    requestAnimationFrame(frame);
+  };
+  const updateToggle=()=>{
+    toggle.textContent=manuallyPaused?'▶ Reprendre':'Ⅱ Pause';
+    toggle.setAttribute('aria-label',manuallyPaused?'Relancer le carrousel automatique':'Mettre le carrousel en pause');
+    toggle.setAttribute('aria-pressed',String(manuallyPaused));
+  };
+  toggle.addEventListener('click',()=>{manuallyPaused=!manuallyPaused;updateToggle()});
+  viewport.addEventListener('pointerenter',()=>{hovered=true});
+  viewport.addEventListener('pointerleave',()=>{hovered=false});
+  viewport.addEventListener('focusin',()=>{focused=true});
+  viewport.addEventListener('focusout',event=>{if(!viewport.contains(event.relatedTarget))focused=false});
+  viewport.addEventListener('pointerdown',event=>{
+    if(reducedMotion.matches||event.button!==0)return;
+    dragging=true;startX=event.clientX;startOffset=offset;
+    viewport.setPointerCapture(event.pointerId);
+    viewport.classList.add('is-dragging');
+  });
+  viewport.addEventListener('pointermove',event=>{if(reducedMotion.matches||!dragging)return;offset=wrap(startOffset+event.clientX-startX);render()});
+  const finish=event=>{
+    if(!dragging)return;
+    dragging=false;viewport.classList.remove('is-dragging');
+    if(viewport.hasPointerCapture(event.pointerId))viewport.releasePointerCapture(event.pointerId);
+  };
+  viewport.addEventListener('pointerup',finish);
+  viewport.addEventListener('pointercancel',finish);
+  window.addEventListener('resize',measure,{passive:true});
+  measure();
+  if(!reducedMotion.matches)requestAnimationFrame(frame);
 }

@@ -87,3 +87,20 @@ img[src*="11.11.55"]{content:url('../../assets/higgsfield/custom-sections.png')}
 .gallery-item img{transition:transform .9s cubic-bezier(.22,1,.36,1),filter .9s ease}
 .gallery-item:hover img{filter:saturate(1) contrast(1.05)}
 @media(prefers-reduced-motion:reduce){.reveal{transition-duration:.01ms!important;transition-delay:0ms!important;transform:none!important}}
+
+/* Continuous home gallery with a quiet, accessible motion control. */
+.carousel-viewport{width:100%;overflow:hidden;margin-top:46px;cursor:grab;touch-action:pan-y;outline:none}
+.carousel-viewport:focus-visible{outline:2px solid #b40023;outline-offset:-2px}
+.carousel-viewport.is-dragging{cursor:grabbing}
+.carousel-track{display:flex;gap:18px;width:max-content;padding:18px max(8vw,24px) 34px;will-change:transform}
+.visual-index.is-carousel .float-tile{position:relative!important;inset:auto!important;display:block!important;flex:0 0 clamp(210px,23vw,320px);width:auto;aspect-ratio:1/.78;transform:rotate(var(--r));transition:transform .35s ease,box-shadow .35s ease}
+.visual-index.is-carousel .float-tile:nth-child(2n){--r:3deg}
+.visual-index.is-carousel .float-tile:nth-child(3n){--r:-4deg}
+.visual-index.is-carousel .float-tile:hover{transform:translateY(-14px) rotate(0);box-shadow:0 30px 50px #0003}
+.visual-index.is-carousel .float-tile img{user-select:none;-webkit-user-drag:none}
+.carousel-meta{display:flex;justify-content:center;align-items:center;gap:22px;margin:23px 0 0}
+.drag-hint{font:10px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:#777;margin:0}
+.carousel-toggle{border:0;border-bottom:1px solid #aaa;background:transparent;color:#555;padding:5px 0;font:10px var(--mono);letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
+.carousel-toggle:hover{color:#111;border-color:#111}
+@media(max-width:760px){.carousel-viewport{margin-top:36px}.visual-index.is-carousel .float-tile{flex-basis:210px}.carousel-meta{flex-direction:column;gap:10px;margin-top:15px}}
+@media(prefers-reduced-motion:reduce){.carousel-track{will-change:auto}.carousel-viewport{overflow-x:auto;scrollbar-width:thin}.visual-index.is-carousel .float-tile{scroll-snap-align:start}.carousel-track{scroll-snap-type:x mandatory}}
