@@ -1,4 +1,7 @@
-document.querySelectorAll('.reveal').forEach(el=>new IntersectionObserver(([entry],observer)=>{if(entry.isIntersecting){el.classList.add('in');observer.disconnect()}},{threshold:.12}).observe(el));
+const motionTargets=document.querySelectorAll('.hero-copy,.page-intro>*,.split>*,.product-dock .dock-item,.gallery-item,.project-card,.metric,.spec,.cert,.value,.extension-heading,.extension-details article,.quality-list>div,.news-list a,.contact-form');
+motionTargets.forEach(el=>{el.classList.add('reveal');const siblings=[...el.parentElement.children];el.style.setProperty('--reveal-delay',`${Math.min(siblings.indexOf(el),5)*75}ms`)});
+const revealObserver=new IntersectionObserver(entries=>entries.forEach(entry=>{if(!entry.isIntersecting)return;entry.target.classList.add('in');revealObserver.unobserve(entry.target)}),{threshold:.08,rootMargin:'0px 0px -3% 0px'});
+document.querySelectorAll('.reveal').forEach(el=>revealObserver.observe(el));
 document.querySelectorAll('.menu-toggle').forEach(button=>button.addEventListener('click',()=>{const nav=button.parentElement;const open=nav.classList.toggle('open');button.setAttribute('aria-expanded',String(open));}));
 document.querySelectorAll('.site-nav .links a').forEach(link=>link.addEventListener('click',()=>{const nav=link.closest('.site-nav');nav.classList.remove('open');nav.querySelector('.menu-toggle')?.setAttribute('aria-expanded','false')}));
 document.addEventListener('keydown',event=>{if(event.key==='Escape')document.querySelectorAll('.site-nav.open').forEach(nav=>{nav.classList.remove('open');nav.querySelector('.menu-toggle')?.setAttribute('aria-expanded','false')})});
