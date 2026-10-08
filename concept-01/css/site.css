@@ -141,3 +141,43 @@ img[src*="11.11.55"]{content:url('../../assets/higgsfield/custom-sections.png')}
 
 /* Keep the homepage footage visible across the full right side. */
 .hero-home:after{background:linear-gradient(90deg,rgba(8,8,8,.74) 0%,rgba(8,8,8,.49) 31%,rgba(8,8,8,.16) 62%,transparent 100%)}
+
+/* Give the homepage introduction copy a clear editorial rhythm. */
+.intro-copy{max-width:570px}
+.intro-body .intro-kicker{display:flex;align-items:center;gap:10px;margin:0 0 18px!important;color:#df7185!important;font:10px var(--mono)!important;letter-spacing:.13em;text-transform:uppercase}
+.intro-body .intro-kicker:before{content:'';width:22px;height:1px;background:var(--red)}
+.intro-body .intro-kicker span{color:#77716c}
+.intro-body .intro-lead{max-width:530px;margin:0 0 16px!important;color:#f6f2eb!important;font-size:clamp(22px,2.15vw,31px)!important;font-weight:550;line-height:1.24!important;letter-spacing:-.045em}
+.intro-body .intro-description{max-width:500px;margin:0 0 26px!important;color:#bdb8b1!important;font-size:14px!important;line-height:1.8!important}
+.intro-copy .button span{display:inline-block;margin-left:4px;transition:transform .25s ease}
+.intro-copy .button:hover span{transform:translate(3px,-3px)}
+@media(prefers-reduced-motion:reduce){.intro-copy .button span{transition:none}}
+
+/* Give each product card more image area and bring its title closer to the number. */
+.product-dock .dock-item{padding:28px 28px 70px}
+.product-dock .dock-item img{height:56%;opacity:.94}
+.product-dock .dock-item:before{background:linear-gradient(180deg,transparent 0 51%,#101014 53%)}
+.product-dock .dock-item:after{left:28px;right:auto;top:52%;width:38px;height:2px;border-radius:0;background:var(--red)}
+.product-dock .dock-item:nth-child(2):before{background:linear-gradient(180deg,transparent 0 51%,#dedfe5 53%)}
+.product-dock .dock-item:nth-child(2):after{background:#9da0a9}
+.product-dock .dock-num{top:59%;font-size:48px}
+.product-dock .dock-arrow{top:60%}
+@media(max-width:760px){.product-dock .dock-item{padding:28px 22px 54px}.product-dock .dock-item img{height:48%}.product-dock .dock-item:before{background:linear-gradient(180deg,transparent 0 43%,#101014 45%)}.product-dock .dock-item:nth-child(2):before{background:linear-gradient(180deg,transparent 0 43%,#dedfe5 45%)}.product-dock .dock-item:after{left:22px;top:46%}.product-dock .dock-num{left:22px;top:50%;font-size:42px}.product-dock .dock-arrow{right:22px;top:51%}}
+
+/* Preserve the complete product photos in the home material gallery. */
+.material-gallery .gallery-grid{display:block;columns:3;column-gap:14px}
+.material-gallery .gallery-item,.material-gallery .gallery-item.large,.material-gallery .gallery-item.tall,.material-gallery .gallery-item.landscape,.material-gallery .gallery-item.square,.material-gallery .gallery-item.wide{display:inline-block;width:100%;height:auto;aspect-ratio:auto;margin:0 0 14px;break-inside:avoid;grid-column:auto;grid-row:auto}
+.material-gallery .gallery-item img,.material-gallery .gallery-item.large img,.material-gallery .gallery-item.landscape img,.material-gallery .gallery-item.square img{display:block;width:100%;height:auto;aspect-ratio:auto;object-fit:contain;object-position:center}
+@media(max-width:760px){.material-gallery .gallery-grid{columns:2;column-gap:10px}.material-gallery .gallery-item,.material-gallery .gallery-item.large,.material-gallery .gallery-item.tall,.material-gallery .gallery-item.landscape,.material-gallery .gallery-item.square,.material-gallery .gallery-item.wide{margin-bottom:10px}}
+
+/* Balance the product page introduction with useful in-page navigation. */
+.product-page-intro .product-intro-copy>p{max-width:620px;margin:0 0 25px;color:#3e3b37;font-size:17px;line-height:1.75}
+.product-intro-index{border-top:1px solid #bcb8b1}
+.product-intro-index a{display:grid;grid-template-columns:38px minmax(135px,.9fr) minmax(170px,1.2fr) 20px;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid #bcb8b1;transition:color .25s ease}
+.product-intro-index a:hover{color:var(--red)}
+.product-intro-number{font:10px var(--mono);color:#817c75}
+.product-intro-index strong{font-size:15px;letter-spacing:-.025em}
+.product-intro-detail{color:#6e6962;font-size:12px;line-height:1.4}
+.product-intro-arrow{justify-self:end;font-size:20px;transition:transform .25s ease}
+.product-intro-index a:hover .product-intro-arrow{transform:translate(2px,2px)}
+@media(max-width:760px){.product-page-intro .product-intro-copy>p{font-size:15px}.product-intro-index a{grid-template-columns:32px 1fr 20px;gap:9px;padding:12px 0}.product-intro-detail{grid-column:2;grid-row:2;font-size:11px}.product-intro-index strong{grid-column:2;grid-row:1}.product-intro-arrow{grid-column:3;grid-row:1}}
