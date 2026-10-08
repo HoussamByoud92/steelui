@@ -28,6 +28,26 @@ document.querySelectorAll('.menu-toggle').forEach(button=>button.addEventListene
 document.querySelectorAll('.site-nav .links a').forEach(link=>link.addEventListener('click',()=>{const nav=link.closest('.site-nav');nav.classList.remove('open');nav.querySelector('.menu-toggle')?.setAttribute('aria-expanded','false')}));
 document.addEventListener('keydown',event=>{if(event.key==='Escape')document.querySelectorAll('.site-nav.open').forEach(nav=>{nav.classList.remove('open');nav.querySelector('.menu-toggle')?.setAttribute('aria-expanded','false')})});
 
+document.querySelectorAll('.contact-form').forEach(form=>form.addEventListener('submit',event=>{
+  event.preventDefault();
+  if(!form.reportValidity())return;
+  const values=new FormData(form);
+  const name=String(values.get('nom')||'').trim();
+  const email=String(values.get('email')||'').trim();
+  const message=String(values.get('message')||'').trim();
+  const subject=`Demande de renseignement UISTEEL — ${name}`;
+  const body=`Nom : ${name}\nEmail : ${email}\n\nMessage :\n${message}`;
+  window.location.href=`mailto:contact@uisteel.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}));
+
+const heroVideo=document.querySelector('.hero-home video');
+if(heroVideo){
+  const motionPreference=window.matchMedia('(prefers-reduced-motion: reduce)');
+  const syncHeroMotion=()=>{if(motionPreference.matches)heroVideo.pause();else heroVideo.play().catch(()=>{})};
+  syncHeroMotion();
+  motionPreference.addEventListener?.('change',syncHeroMotion);
+}
+
 const pinboard=document.querySelector('.pinboard');
 if(pinboard){
   const moveSpotlight=event=>{

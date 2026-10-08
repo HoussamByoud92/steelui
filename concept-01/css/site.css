@@ -127,3 +127,17 @@ img[src*="11.11.55"]{content:url('../../assets/higgsfield/custom-sections.png')}
 /* Let the homepage mill footage read clearly while keeping the title legible. */
 .hero-home video{opacity:.96;filter:saturate(.9) contrast(1.04) brightness(1.2)}
 .hero-home:after{background:linear-gradient(90deg,rgba(8,8,8,.74) 0%,rgba(8,8,8,.49) 31%,rgba(8,8,8,.16) 62%,transparent 100%),linear-gradient(0deg,rgba(8,8,8,.38) 0%,transparent 52%)}
+
+/* Clear supporting details for credentials and email-client form routes. */
+.cert-date{margin:12px 0 0;color:#aaa39a;font:10px var(--mono);letter-spacing:.08em;text-transform:uppercase}
+.form-note{margin:0;color:#c6c0b9;font-size:12px;line-height:1.6}
+.career-cta>p:not(.eyebrow){max-width:540px;margin:0 auto 24px;color:#eee4dd;font-size:14px;line-height:1.7}
+.cert-date{grid-column:2}
+@media(max-width:760px){.cert-date{grid-column:1}}
+
+/* Keyboard access */
+.skip-link{position:fixed;z-index:1000;top:12px;left:12px;padding:12px 16px;background:#f6f2eb;color:#111;font:600 13px var(--sans);transform:translateY(-180%);transition:transform .2s ease}
+.skip-link:focus{transform:translateY(0)}
+
+/* Keep the homepage footage visible across the full right side. */
+.hero-home:after{background:linear-gradient(90deg,rgba(8,8,8,.74) 0%,rgba(8,8,8,.49) 31%,rgba(8,8,8,.16) 62%,transparent 100%)}
