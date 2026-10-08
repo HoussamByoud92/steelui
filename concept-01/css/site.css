@@ -181,3 +181,25 @@ img[src*="11.11.55"]{content:url('../../assets/higgsfield/custom-sections.png')}
 .product-intro-arrow{justify-self:end;font-size:20px;transition:transform .25s ease}
 .product-intro-index a:hover .product-intro-arrow{transform:translate(2px,2px)}
 @media(max-width:760px){.product-page-intro .product-intro-copy>p{font-size:15px}.product-intro-index a{grid-template-columns:32px 1fr 20px;gap:9px;padding:12px 0}.product-intro-detail{grid-column:2;grid-row:2;font-size:11px}.product-intro-index strong{grid-column:2;grid-row:1}.product-intro-arrow{grid-column:3;grid-row:1}}
+
+/* Square, uncropped product images in the homepage range cards. */
+.product-dock .dock-item{height:calc(100vw / 3 + 190px);min-height:0;padding:28px 28px 30px}
+.product-dock .dock-item img{top:0;left:0;right:0;width:100%;height:calc(100vw / 3);aspect-ratio:1 / 1;object-fit:contain;opacity:1;background:#101014}
+.product-dock .dock-item:nth-child(2) img{background:#dedfe5}
+.product-dock .dock-item:nth-child(3) img{background:#111a1e}
+.product-dock .dock-item:before{background:linear-gradient(180deg,transparent 0,transparent calc(100vw / 3),#101014 calc(100vw / 3 + 2px))}
+.product-dock .dock-item:nth-child(2):before{background:linear-gradient(180deg,transparent 0,transparent calc(100vw / 3),#dedfe5 calc(100vw / 3 + 2px))}
+.product-dock .dock-item:after{left:28px;right:auto;top:calc(100vw / 3);width:38px;height:2px;background:var(--red)}
+.product-dock .dock-item:nth-child(2):after{background:#9da0a9}
+.product-dock .dock-num{left:28px;top:calc(100vw / 3 + 12px);font-size:48px}
+.product-dock .dock-arrow{right:28px;top:calc(100vw / 3 + 20px)}
+@media(max-width:760px){.product-dock .dock-item{height:calc(100vw + 160px);min-height:0;padding:28px 22px 30px}.product-dock .dock-item img{height:100vw}.product-dock .dock-item:before{background:linear-gradient(180deg,transparent 0,transparent 100vw,#101014 calc(100vw + 2px))}.product-dock .dock-item:nth-child(2):before{background:linear-gradient(180deg,transparent 0,transparent 100vw,#dedfe5 calc(100vw + 2px))}.product-dock .dock-item:after{left:22px;top:100vw}.product-dock .dock-num{left:22px;top:calc(100vw + 10px);font-size:42px}.product-dock .dock-arrow{right:22px;top:calc(100vw + 17px)}}
+
+/* A balanced six-tile home gallery; square frames show every photo uncropped. */
+.material-gallery .gallery-grid{display:grid;columns:auto;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.material-gallery .gallery-item,.material-gallery .gallery-item.large,.material-gallery .gallery-item.tall,.material-gallery .gallery-item.landscape,.material-gallery .gallery-item.square,.material-gallery .gallery-item.wide,.material-gallery .gallery-item.team{display:grid;width:100%;height:auto;aspect-ratio:1;grid-column:auto;grid-row:auto;grid-template-rows:minmax(0,1fr) auto;margin:0;break-inside:auto;background:#e5e2db}
+.material-gallery .gallery-item img,.material-gallery .gallery-item.large img,.material-gallery .gallery-item.landscape img,.material-gallery .gallery-item.square img{display:block;width:100%;height:100%;min-height:0;aspect-ratio:auto;object-fit:contain;object-position:center;background:#e5e2db;transition:none}
+.material-gallery .gallery-item figcaption{position:static;padding:12px 14px;color:#211f1c;text-shadow:none;font-size:10px}
+.material-gallery .gallery-item:hover{transform:translateY(-4px);box-shadow:0 16px 30px #0002}
+.material-gallery .gallery-item:hover img{transform:none}
+@media(max-width:760px){.material-gallery .gallery-grid{columns:auto;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.material-gallery .gallery-item,.material-gallery .gallery-item.large,.material-gallery .gallery-item.tall,.material-gallery .gallery-item.landscape,.material-gallery .gallery-item.square,.material-gallery .gallery-item.wide,.material-gallery .gallery-item.team{margin:0}}
