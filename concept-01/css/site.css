@@ -204,3 +204,8 @@ img[src*="11.11.55"]{content:url('../../assets/higgsfield/custom-sections.png')}
 .material-gallery .gallery-item:hover{transform:translateY(-4px);box-shadow:0 16px 30px #0002}
 .material-gallery .gallery-item:hover img{transform:scale(1.035)}
 @media(max-width:760px){.material-gallery .gallery-grid{columns:auto;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.material-gallery .gallery-item,.material-gallery .gallery-item.large,.material-gallery .gallery-item.tall,.material-gallery .gallery-item.landscape,.material-gallery .gallery-item.square,.material-gallery .gallery-item.wide,.material-gallery .gallery-item.team{margin:0}}
+
+/* Match explicit grid rows to the square card width to prevent image overlap. */
+.material-gallery .gallery-grid{grid-template-rows:repeat(2,calc((84vw - 36px)/3));grid-auto-rows:calc((84vw - 36px)/3)}
+.material-gallery .gallery-item,.material-gallery .gallery-item.large,.material-gallery .gallery-item.tall,.material-gallery .gallery-item.landscape,.material-gallery .gallery-item.square,.material-gallery .gallery-item.wide,.material-gallery .gallery-item.team{height:100%;min-height:0;aspect-ratio:auto}
+@media(max-width:760px){.material-gallery .gallery-grid{grid-template-rows:repeat(3,calc((86vw - 10px)/2));grid-auto-rows:calc((86vw - 10px)/2)}.material-gallery .gallery-item,.material-gallery .gallery-item.large,.material-gallery .gallery-item.tall,.material-gallery .gallery-item.landscape,.material-gallery .gallery-item.square,.material-gallery .gallery-item.wide,.material-gallery .gallery-item.team{height:100%;aspect-ratio:auto}}
