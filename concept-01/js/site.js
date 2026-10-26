@@ -46,6 +46,14 @@ if(heroVideo){
   const syncHeroMotion=()=>{if(motionPreference.matches)heroVideo.pause();else heroVideo.play().catch(()=>{})};
   syncHeroMotion();
   motionPreference.addEventListener?.('change',syncHeroMotion);
+  const hero=document.querySelector('.hero-home');
+  let minimumDelayElapsed=false;
+  const revealVideo=()=>{
+    if(!minimumDelayElapsed||heroVideo.readyState<2)return;
+    hero?.classList.add('is-video-ready');
+  };
+  heroVideo.addEventListener('canplay',revealVideo);
+  window.setTimeout(()=>{minimumDelayElapsed=true;revealVideo()},3000);
 }
 
 const pinboard=document.querySelector('.pinboard');
