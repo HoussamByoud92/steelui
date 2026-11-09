@@ -1,0 +1,134 @@
+/* UISTEEL — continuous steel journey (home page, sections 2 → end).
+   Everything is scoped to html.journey-on: without WebGL2 or with reduced motion
+   the original layout is untouched. Brand tokens come from base.css / site.css. */
+
+.journey-stage,.stage-rail,.dock-tag{display:none}
+
+.journey-on .hero-home{z-index:2}
+.journey-on .journey{position:relative;z-index:1}
+.journey-on .site-footer{position:relative;z-index:1}
+
+/* ---------- fixed film layer ---------- */
+.journey-on .journey-stage{display:block;position:fixed;inset:0;z-index:0;pointer-events:none;visibility:hidden;overflow:hidden;
+  background:radial-gradient(120% 95% at 64% 46%,#18181b 0%,#0d0d0e 55%,#070707 100%)}
+.journey-on .journey-stage.is-visible{visibility:visible}
+.journey-stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.journey-stage video{position:absolute;left:0;top:0;width:2px;height:2px;opacity:.01;pointer-events:none}
+.journey-dim{position:absolute;inset:0;background:#0a0a0b;opacity:var(--stage-dim,0)}
+.journey-stage:after{content:'';position:absolute;inset:0;background:radial-gradient(130% 100% at 60% 50%,transparent 55%,rgba(5,5,6,.72) 100%)}
+
+/* ---------- 3D-anchored labels ---------- */
+.journey-labels{position:absolute;inset:0;z-index:2}
+.j-label{position:absolute;left:0;top:0;opacity:0;will-change:transform,opacity;font:500 10px var(--mono);letter-spacing:.11em;text-transform:uppercase;color:#f2f0eb}
+.j-label i{position:absolute;left:-4px;top:-4px;width:8px;height:8px;border-radius:50%;background:var(--red);box-shadow:0 0 0 4px rgba(180,0,35,.22)}
+.j-label:before{content:'';position:absolute;left:0;top:0;width:46px;height:1px;background:rgba(242,240,235,.55);transform-origin:0 0;transform:rotate(-42deg)}
+.j-label span{position:absolute;left:34px;bottom:30px;white-space:nowrap;padding:2px 0 2px 10px;border-left:1px solid rgba(242,240,235,.45)}
+.j-label b{display:block;font-weight:500;color:#fff}
+.j-label em{display:block;font-style:normal;color:#e48a9a;margin-top:5px}
+.j-label.is-down:before{transform:rotate(42deg)}
+.j-label.is-down span{bottom:auto;top:30px}
+
+/* no generic fade-ins inside the film: the scene carries the motion */
+.journey-on .journey .reveal:not(.dock-item){opacity:1;transform:none;transition:none}
+
+/* ---------- 02 · Du métal à la maîtrise ---------- */
+.journey-on .page-intro.intro-material{background:transparent;min-height:100vh;display:flex;flex-direction:column;justify-content:center;gap:44px}
+.journey-on .intro-material:after{content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,rgba(9,9,10,.9) 0%,rgba(9,9,10,.62) 34%,rgba(9,9,10,0) 62%)}
+.journey-on .intro-material .intro-title,.journey-on .intro-material .intro-body{max-width:560px}
+.journey-on .intro-material .intro-body{display:block}
+.journey-on .intro-material .intro-visual{display:none}
+
+/* ---------- 03 · product stage ---------- */
+.journey-on .product-dock{background:transparent;color:#f7f5f0}
+.journey-on .product-dock .dock-item img,
+.journey-on .product-dock .dock-item:before,
+.journey-on .product-dock .dock-item:after{display:none}
+.journey-on .product-dock .dock-item{background:none!important;color:#f7f5f0!important;border:0;border-radius:0;transition:none}
+.journey-on .product-dock .dock-item:hover{transform:none}
+.journey-on .product-dock .dock-num,.journey-on .product-dock .dock-arrow{position:static}
+.journey-on .dock-tag{display:inline-block;margin:0 0 14px;padding:6px 10px;border:1px solid rgba(242,240,235,.3);border-radius:100px;font:500 9px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:#e7e2db}
+
+.journey-on .product-dock.is-pinned{position:relative;height:100vh;min-height:560px;padding:0;overflow:hidden}
+.journey-on .product-dock.is-pinned:before{content:'';position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(90deg,rgba(8,8,9,.82) 0%,rgba(8,8,9,.4) 30%,rgba(8,8,9,0) 52%),linear-gradient(0deg,rgba(8,8,9,.55) 0%,rgba(8,8,9,0) 34%)}
+.journey-on .product-dock.is-pinned .dock-head{position:absolute;left:8%;top:22vh;max-width:560px;margin:0;will-change:opacity,transform}
+.journey-on .product-dock.is-pinned .dock-list{display:block;max-width:none;margin:0}
+.journey-on .product-dock.is-pinned .dock-item{position:absolute;left:8%;bottom:12vh;width:min(440px,36vw);min-height:0;padding:0;display:block;opacity:0;visibility:hidden;will-change:opacity,transform}
+.journey-on .product-dock.is-pinned .dock-num{display:block;font-size:clamp(64px,7vw,104px);line-height:.8;letter-spacing:-.08em;color:transparent;-webkit-text-stroke:1px rgba(242,240,235,.55);margin-bottom:18px}
+.journey-on .product-dock.is-pinned .dock-item h3{font-size:clamp(44px,5.2vw,82px);line-height:.88;letter-spacing:-.075em;margin:0 0 18px}
+.journey-on .product-dock.is-pinned .dock-item p{font-size:15px;line-height:1.7;max-width:360px;opacity:.82}
+.journey-on .product-dock.is-pinned .dock-arrow{display:inline-flex;align-items:center;justify-content:center;margin-top:22px;width:46px;height:46px;border-radius:50%;background:var(--red);font-size:18px;pointer-events:auto}
+.journey-on .product-dock.is-pinned .stage-rail{display:flex;position:absolute;right:8%;bottom:12vh;gap:28px;margin:0;padding:16px 0 0;list-style:none;font:500 10px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:rgba(242,240,235,.42);border-top:1px solid rgba(242,240,235,.16)}
+.journey-on .product-dock.is-pinned .stage-rail:before{content:'';position:absolute;left:0;top:-1px;height:1px;width:100%;background:var(--red);transform:scaleX(var(--p,0));transform-origin:left}
+.journey-on .product-dock.is-pinned .stage-rail li{transition:color .4s ease}
+.journey-on .product-dock.is-pinned .stage-rail li.is-active{color:#fff}
+
+/* ---------- 04 · Le standard UISTEEL ---------- */
+.journey-on .pinboard{background:transparent}
+.journey-on .pin-note{background:rgba(22,22,25,.9);border-color:rgba(255,255,255,.13)}
+.journey-on .pin-note:hover{background:rgba(70,14,26,.8)}
+
+/* ---------- 05 · Galerie matière / 06 · Index ---------- */
+.journey-on .material-gallery{background:transparent;color:#f7f5f0}
+.journey-on .material-gallery header>p:last-child{color:#bdb8b1}
+.journey-on .material-gallery .gallery-item{background:#1c1c1e}
+.journey-on .visual-index{background:transparent;color:#f7f5f0}
+.journey-on .visual-index>p:not(.eyebrow){color:#c9c4bd}
+.journey-on .visual-index .button-dark{background:#f2f0eb;color:#111}
+.journey-on .drag-hint{color:#a8a39c}
+.journey-on .carousel-toggle{color:#c9c4bd;border-bottom-color:#6b6762}
+.journey-on .carousel-toggle:hover{color:#fff;border-color:#fff}
+
+/* ---------- 07 · En chiffres ---------- */
+.journey-on .section-paper{background:transparent;color:#f7f5f0;min-height:90vh;display:flex;flex-direction:column;justify-content:flex-end;position:relative}
+.journey-on .section-paper:before{content:'';position:absolute;inset:0;pointer-events:none;background:linear-gradient(0deg,rgba(8,8,9,.85) 0%,rgba(8,8,9,0) 45%)}
+.journey-on .section-paper>*{position:relative}
+.journey-on .metric-row{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.14)}
+.journey-on .metric{background:rgba(18,18,20,.86);border-color:rgba(255,255,255,.12)}
+.journey-on .metric strong{color:#fff}
+.journey-on .metric span{color:#c9c4bd}
+
+/* ---------- 08 · L'acier au service du Maroc ---------- */
+.journey-on .editorial-extension.extension-dark{background:transparent;min-height:105vh;position:relative}
+.journey-on .editorial-extension.extension-dark:before{content:'';position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,rgba(8,8,9,.85) 0%,rgba(8,8,9,.45) 40%,rgba(8,8,9,0) 65%)}
+.journey-on .editorial-extension.extension-dark>*{position:relative}
+
+/* ---------- mobile: no pinning, one screen per chapter ---------- */
+@media (max-width:760px){
+  .journey-on .page-intro.intro-material{min-height:110svh;justify-content:flex-end;padding-bottom:12svh}
+  .journey-on .intro-material:after{background:linear-gradient(0deg,rgba(9,9,10,.94) 0%,rgba(9,9,10,.7) 45%,rgba(9,9,10,0) 75%)}
+  .journey-on .product-dock{padding:0}
+  .journey-on .product-dock .dock-head{margin:0;padding:22svh 7% 0;min-height:60svh}
+  .journey-on .product-dock .dock-list{display:flex;flex-direction:column}
+  .journey-on .product-dock .dock-item{min-height:105svh;display:flex;flex-direction:column;justify-content:flex-end;padding:0 7% 12svh;
+    background:linear-gradient(0deg,rgba(8,8,9,.92) 0%,rgba(8,8,9,.6) 26%,rgba(8,8,9,0) 48%)!important;border-bottom:0}
+  .journey-on .product-dock .dock-item.reveal{opacity:1;transform:none}
+  .journey-on .product-dock .dock-item[href$="#armature"]{order:2}
+  .journey-on .product-dock .dock-item[href$="#wire"]{order:3}
+  .journey-on .product-dock .dock-num{font-size:52px;margin-bottom:10px}
+  .journey-on .product-dock .dock-item h3{font-size:44px;line-height:.9}
+  .journey-on .product-dock .dock-item p{font-size:14px;max-width:none}
+  .journey-on .product-dock .dock-arrow{display:none}
+  .journey-on .section-paper{min-height:90svh}
+  .journey-on .editorial-extension.extension-dark{min-height:100svh}
+  .journey-on .editorial-extension.extension-dark:before{background:linear-gradient(180deg,rgba(8,8,9,.88) 0%,rgba(8,8,9,.5) 60%,rgba(8,8,9,0) 100%)}
+  .j-label{font-size:9px}
+  .j-label span{left:26px;bottom:24px}
+  .j-label:before{width:36px}
+}
+
+/* closing section: single text column, the structure rises on the right */
+@media (min-width:761px){
+  .journey-on .editorial-extension.extension-dark{display:block}
+  .journey-on .editorial-extension .extension-heading,.journey-on .editorial-extension .extension-body{max-width:600px}
+  .journey-on .editorial-extension .extension-details{grid-template-columns:repeat(3,1fr)}
+}
+
+/* labels near the right edge read leftwards */
+.j-label.is-left:before{transform:rotate(-138deg)}
+.j-label.is-left.is-down:before{transform:rotate(138deg)}
+.j-label.is-left span{left:auto;right:34px;padding:2px 10px 2px 0;border-left:0;border-right:1px solid rgba(242,240,235,.45);text-align:right}
+@media (max-width:760px){.j-label.is-left span{right:26px}}
+
+/* scroll-linked film: instant native scrolling, the film eases itself */
+html.journey-on{scroll-behavior:auto}
