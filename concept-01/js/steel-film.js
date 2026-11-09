@@ -56,9 +56,9 @@ async function init() {
     // coarse-to-fine global order, so any position has a nearby frame early
     const order = [];
     const seen = new Uint8Array(n);
-    for (const stride of [32, 16, 8, 4, 2, 1]) for (let i = 0; i < n; i += stride) if (!seen[i]) { seen[i] = 1; order.push(i); }
+    for (const stride of [64, 32, 16, 8, 4, 2, 1]) for (let i = 0; i < n; i += stride) if (!seen[i]) { seen[i] = 1; order.push(i); }
     let orderPos = 0;
-    const BACK = 10, AHEAD = 22, MAX_FETCH = 6, MAX_DECODE = 3;
+    const BACK = 12, AHEAD = 28, MAX_FETCH = 8, MAX_DECODE = 4;
 
     function fetchFrame(i) {
       fetching.add(i); inflight++;
@@ -92,7 +92,7 @@ async function init() {
       }
       for (const [i, bm] of bitmaps) if (i < lo - 4 || i > hi + 4) { bm.close(); bitmaps.delete(i); }
     }
-    function nearest(i, maxD = 40) {
+    function nearest(i, maxD = 80) {
       if (bitmaps.has(i)) return i;
       for (let d = 1; d <= maxD; d++) { if (bitmaps.has(i - d)) return i - d; if (bitmaps.has(i + d)) return i + d; }
       return -1;
