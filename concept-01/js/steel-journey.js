@@ -5,6 +5,10 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { steelMaterial, streamGeometry, straightBar, Stirrup, RIB, noiseTexture } from './steel-geometry.js';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -13,6 +17,9 @@ const root = document.documentElement;
 const journey = document.querySelector('.journey');
 const stageEl = document.querySelector('.journey-stage');
 const canvas = stageEl?.querySelector('canvas');
+// ?capture=desktop|mobile renders the film offline at high quality (scripts/capture-film.mjs)
+const CAPTURE = new URLSearchParams(location.search).get('capture');
+if (CAPTURE) { root.classList.remove('journey-off'); root.classList.add('journey-on'); }
 
 function disable(reason) {
   console.warn('[UISTEEL journey] fallback:', reason);
@@ -27,15 +34,18 @@ try { if (root.classList.contains('journey-on') && journey && canvas) init(); el
 catch (err) { disable(err); }
 
 function init() {
-  const isMobile = () => window.matchMedia('(max-width: 760px)').matches;
-  const lite = isMobile() || (navigator.hardwareConcurrency || 8) <= 4;
+  const isMobile = () => CAPTURE ? CAPTURE === 'mobile' : window.matchMedia('(max-width: 760px)').matches;
+  const lite = !CAPTURE && (isMobile() || (navigator.hardwareConcurrency || 8) <= 4);
+  let capW = 0, capH = 0;
   let stageVisible = false, Tcur = 0, Tdrawn = NaN, needsResize = true, W = 0, H = 0;
-  const Q = lite
+  const Q = CAPTURE
+    ? { rings: 1800, radial: 64, heroPitch: 20, heroRadial: 56, lodPitch: 6, lodRadial: 18, coil: 640, stirPitch: 8, stirRadial: 22, dpr: 1 }
+    : lite
     ? { rings: 640, radial: 26, heroPitch: 7, heroRadial: 22, lodPitch: 2.5, lodRadial: 8, coil: 260, stirPitch: 4, stirRadial: 10, dpr: 1.2 }
     : { rings: 900, radial: 36, heroPitch: 10, heroRadial: 30, lodPitch: 3, lodRadial: 10, coil: 420, stirPitch: 5, stirRadial: 12, dpr: 1.35 };
 
   // ------------------------------------------------------------------ renderer
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: !lite && (window.devicePixelRatio || 1) < 1.5, alpha: false, powerPreference: 'high-performance' });
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: CAPTURE ? false : !lite && (window.devicePixelRatio || 1) < 1.5, alpha: false, powerPreference: 'high-performance', preserveDrawingBuffer: !!CAPTURE });
   if (!renderer.capabilities.isWebGL2) throw new Error('WebGL2 unavailable');
   renderer.setClearColor(0x0b0b0c, 1);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -51,9 +61,25 @@ function init() {
   scene.environmentIntensity = 0.38;
 
   const camera = new THREE.PerspectiveCamera(34, 1, 0.05, 160);
+  let composer = null, bloom = null;
+  if (CAPTURE) {
+    renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    const rt = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: 4 });
+    composer = new EffectComposer(renderer, rt);
+    composer.addPass(new RenderPass(scene, camera));
+    bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.42, 0.55, 0.92);
+    composer.addPass(bloom);
+    composer.addPass(new OutputPass());
+  }
+  const renderFrame = () => composer ? composer.render() : renderer.render(scene, camera);
 
   // ------------------------------------------------------------------ lights
-  const key = new THREE.DirectionalLight(0xfff4e8, 1.75); key.position.set(6, 11, 9); scene.add(key);
+  const key = new THREE.DirectionalLight(0xfff4e8, 1.75); key.position.set(6, 11, 9); scene.add(key); scene.add(key.target);
+  if (CAPTURE) {
+    key.castShadow = true; key.shadow.mapSize.set(4096, 4096);
+    Object.assign(key.shadow.camera, { left: -13, right: 13, top: 13, bottom: -13, near: 0.5, far: 60 });
+    key.shadow.bias = -0.0003; key.shadow.normalBias = 0.025; key.shadow.radius = 3;
+  }
   const rim = new THREE.DirectionalLight(0xa9bccd, 1.6); rim.position.set(-9, 5, -11); scene.add(rim);
   const fill = new THREE.HemisphereLight(0x8c96a3, 0x120c0b, 0.35); scene.add(fill);
   const accent = new THREE.PointLight(0xff6418, 0, 13, 2); scene.add(accent);
@@ -330,7 +356,7 @@ function init() {
 
   // coil rings (laid rings, centres precessing between ID and OD like a Stelmor-formed coil)
   const NC = Q.coil;
-  const ringGeo = new THREE.TorusGeometry(COIL.r, WIRE_R, 5, lite ? 40 : 48).rotateX(Math.PI / 2);
+  const ringGeo = new THREE.TorusGeometry(COIL.r, WIRE_R, CAPTURE ? 10 : 5, CAPTURE ? 112 : lite ? 40 : 48).rotateX(Math.PI / 2);
   ringGeo.setAttribute('aRib', new THREE.BufferAttribute(new Float32Array(ringGeo.attributes.position.count), 1));
   const coilHeat = new THREE.InstancedBufferAttribute(new Float32Array(NC), 1);
   ringGeo.setAttribute('aHeat', coilHeat);
@@ -514,12 +540,14 @@ function init() {
   ];
   const posCurve = new THREE.CatmullRomCurve3(CAM.map(c => c[1]), false, 'centripetal');
   const tgtCurve = new THREE.CatmullRomCurve3(CAM.map(c => c[2]), false, 'centripetal');
+  const camTarget = new THREE.Vector3(), tmpV3 = new THREE.Vector3(), KEY_OFF = new THREE.Vector3(6, 11, 9);
   function cameraAt(T) {
     let i = 0; while (i < CAM.length - 2 && T > CAM[i + 1][0]) i++;
     const f = clamp01((T - CAM[i][0]) / (CAM[i + 1][0] - CAM[i][0]));
     const u = (i + f) / (CAM.length - 1);
     camera.position.copy(posCurve.getPoint(u));
-    camera.lookAt(tgtCurve.getPoint(u));
+    tgtCurve.getPoint(u, camTarget);
+    camera.lookAt(camTarget);
   }
 
   // ================================================================== HTML labels anchored to the 3D
@@ -599,6 +627,7 @@ function init() {
       const a = (state[o.key] || 0) * o.max;
       bgMat.uniforms.uA.value.setComponent(i, a);
       if (a > 0.01) videoLive = true;
+      if (CAPTURE) continue;
       if (a > 0.01 && stageVisible) {
         if (!o.loaded) { o.v.src = o.v.dataset.src; o.loaded = true; }
         if (!o.playing) { o.playing = true; o.v.play().catch(() => {}); }
@@ -847,8 +876,9 @@ function init() {
 
   let lastDraw = 0, lastVideoDraw = 0, frameAvg = 16, lastDprChange = 0, slowGpu = false, skip = false, drewLast = false;
   function resize() {
-    W = stageEl.clientWidth; H = stageEl.clientHeight;
-    renderer.setPixelRatio(dpr); renderer.setSize(W, H, false);
+    W = capW || stageEl.clientWidth; H = capH || stageEl.clientHeight;
+    renderer.setPixelRatio(CAPTURE ? 1 : dpr); renderer.setSize(W, H, false);
+    if (composer) { composer.setSize(W, H); }
     camera.aspect = W / H;
     camera.fov = W < H ? Math.min(62, 2 * Math.atan(Math.tan((34 * Math.PI / 180) / 2) * (1.5 / camera.aspect) * 0.75) * 180 / Math.PI) : 34;
     camera.updateProjectionMatrix();
@@ -889,7 +919,10 @@ function init() {
     cameraAt(Tcur);
     const mob = isMobile();
     camera.setViewOffset(W, H, mob ? 0 : -state.shift * W, mob ? H * 0.17 : 0, W, H);
-    renderer.render(scene, camera);
+    if (CAPTURE) {
+      tmpV3.copy(camTarget); key.target.position.copy(tmpV3); key.position.copy(tmpV3).add(KEY_OFF); key.target.updateMatrixWorld();
+    }
+    renderFrame();
     updateLabels(Tcur, W, H);
     updateCaptions(Tcur);
     updateVideos();
@@ -899,6 +932,42 @@ function init() {
 
   document.addEventListener('visibilitychange', () => { if (document.hidden) videos.forEach(o => { o.v.pause(); o.playing = false; }); else updateVideos(); });
   window.addEventListener('load', () => ScrollTrigger.refresh());
+  if (CAPTURE) {
+    const NO_CAST = new Set([stream, bg, floor, doorGlow, scan, scanLine]);
+    scene.traverse(o => { if (o.isMesh) { o.receiveShadow = true; o.castShadow = !NO_CAST.has(o); } });
+    stageEl.classList.add('is-visible'); stageVisible = true;
+    const out = document.createElement('canvas'); const octx = out.getContext('2d');
+    const seek = (v, t) => new Promise(res => { const done = () => { v.removeEventListener('seeked', done); res(); }; v.addEventListener('seeked', done); v.currentTime = t; setTimeout(done, 3000); });
+    const ready = v => v.readyState >= 2 ? Promise.resolve() : new Promise(res => { v.addEventListener('loadeddata', res, { once: true }); setTimeout(res, 8000); });
+    window.__capture = async (T, outW, outH, ss = 1.5, q = 0.8) => {
+      capW = Math.round(outW * ss); capH = Math.round(outH * ss); needsResize = true;
+      tl.time(T, false); apply(T);
+      for (const [i, o] of videos.entries()) {
+        const a = (state[o.key] || 0) * o.max;
+        if (a > 0.01) {
+          if (!o.loaded) { o.v.preload = 'auto'; o.v.src = o.v.dataset.src; o.loaded = true; }
+          await ready(o.v);
+          await seek(o.v, (T * 2.2) % Math.max(0.1, (o.v.duration || 8) - 0.05));
+          o.tex.needsUpdate = true;
+        }
+        void i;
+      }
+      Tcur = T; draw();
+      out.width = outW; out.height = outH;
+      octx.imageSmoothingEnabled = true; octx.imageSmoothingQuality = 'high';
+      octx.drawImage(renderer.domElement, 0, 0, outW, outH);
+      const url = out.toDataURL('image/webp', q);
+      const labels = LABELS.map(l => {
+        const a = fade(T, l.t[0], l.t[1], 0.08);
+        if (a <= 0.001) return 0;
+        proj.copy(l.at()).project(camera);
+        if (!(proj.z < 1 && Math.abs(proj.x) < 1.1 && Math.abs(proj.y) < 1.1)) return 0;
+        return [+a.toFixed(3), +(proj.x * 0.5 + 0.5).toFixed(4), +(-proj.y * 0.5 + 0.5).toFixed(4)];
+      });
+      return { url, labels, dim: +state.dim.toFixed(3) };
+    };
+    window.__captureLabels = LABELS.map(l => ({ k: l.k, v: l.v, side: l.side || '' }));
+  }
   window.__journeyReady = true;
   window.__journey = {
     state, get T() { return Tcur; }, renderer, scene, camera,

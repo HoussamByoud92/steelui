@@ -53,7 +53,7 @@
   background:linear-gradient(90deg,rgba(8,8,9,.82) 0%,rgba(8,8,9,.4) 30%,rgba(8,8,9,0) 52%),linear-gradient(0deg,rgba(8,8,9,.55) 0%,rgba(8,8,9,0) 34%)}
 .journey-on .product-dock.is-pinned .dock-head{position:absolute;left:8%;top:22vh;max-width:560px;margin:0;will-change:opacity,transform}
 .journey-on .product-dock.is-pinned .dock-list{display:block;max-width:none;margin:0}
-.journey-on .product-dock.is-pinned .dock-item{position:absolute;left:8%;bottom:12vh;width:min(440px,36vw);min-height:0;padding:0;display:block;opacity:0;visibility:hidden;will-change:opacity,transform}
+.journey-on .product-dock.is-pinned .dock-item{position:absolute;left:8%;top:0;bottom:0;margin:auto 0;height:fit-content;width:min(440px,36vw);min-height:0;padding:0;display:block;opacity:0;visibility:hidden;will-change:opacity,transform}
 .journey-on .product-dock.is-pinned .dock-num{display:block;font-size:clamp(64px,7vw,104px);line-height:.8;letter-spacing:-.08em;color:transparent;-webkit-text-stroke:1px rgba(242,240,235,.55);margin-bottom:18px}
 .journey-on .product-dock.is-pinned .dock-item h3{font-size:clamp(44px,5.2vw,82px);line-height:.88;letter-spacing:-.075em;margin:0 0 18px}
 .journey-on .product-dock.is-pinned .dock-item p{font-size:15px;line-height:1.7;max-width:360px;opacity:.82}
