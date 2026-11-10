@@ -27,6 +27,8 @@ const smooth = (a, b, x) => { const t = clamp01((x - a) / (b - a)); return t * t
 const fade = (T, a, b, f) => Math.min(smooth(a, a + f, T), 1 - smooth(b - f, b, T));
 const isMobile = () => window.matchMedia('(max-width: 760px)').matches;
 // frame index for film time T: the product chapter is rendered denser than the rest (meta.segs)
+// film time of frame i (inverse of frameAt)
+const timeAt = (m, i) => { const segs = m.segs || [[0, m.step, 0]]; let k = segs.length - 1; while (k > 0 && i < segs[k][2]) k--; return segs[k][0] + (i - segs[k][2]) * segs[k][1]; };
 const frameAt = (m, T) => { const segs = m.segs || [[0, m.step, 0]]; let k = segs.length - 1; while (k > 0 && T < segs[k][0]) k--; return Math.min(m.count - 1, Math.max(0, segs[k][2] + (T - segs[k][0]) / segs[k][1])); };
 
 if (root.classList.contains('journey-on') && journey && canvas) init().catch(disable);
@@ -210,9 +212,10 @@ async function init() {
     canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
     needsResize = false; Tdrawn = NaN;
   }
-  function draw(T) {
+  function draw(T, settled) {
     if (needsResize) resize();
-    const m = seq.meta, f = frameAt(m, T), i0 = Math.min(seq.n - 1, Math.floor(f)), i1 = Math.min(seq.n - 1, i0 + 1), fr = f - i0;
+    ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = settled ? 'high' : 'medium';
+    const m = seq.meta, fRaw = frameAt(m, T), f = settled ? Math.round(fRaw) : fRaw, i0 = Math.min(seq.n - 1, Math.floor(f + 1e-6)), i1 = Math.min(seq.n - 1, i0 + 1), fr = Math.max(0, f - i0);
     const cw = canvas.width, ch = canvas.height;
     const s = Math.max(cw / m.width, ch / m.height), dw = m.width * s, dh = m.height * s, dx = (cw - dw) / 2, dy = (ch - dh) / 2;
     const a = seq.nearest(i0), b = seq.bitmaps.has(i1) ? i1 : -1;
@@ -241,7 +244,9 @@ async function init() {
   let last = performance.now();
   gsap.ticker.add(() => {
     const now = performance.now(), dt = Math.min(0.1, (now - last) / 1000); last = now;
-    const target = targetT();
+    // the playhead always comes to rest exactly on a rendered frame: no blended, ghosted still when scrolling stops
+    let target = targetT();
+    if (seq) target = timeAt(seq.meta, Math.round(frameAt(seq.meta, target)));
     Tcur += (target - Tcur) * (1 - Math.exp(-dt * 12));
     if (Math.abs(target - Tcur) < 0.0005) Tcur = target;
     if (target !== Tcur) lastDir = target > Tcur ? 1 : -1;
@@ -249,7 +254,7 @@ async function init() {
     seq.pump(frameAt(seq.meta, Tcur), frameAt(seq.meta, target));
     if (!stageVisible || Tcur === Tdrawn) return;
     updateCaptions(Tcur);
-    if (draw(Tcur)) Tdrawn = Tcur; // exact frame not decoded yet → redraw when it arrives
+    if (draw(Tcur, Tcur === target)) Tdrawn = Tcur; // exact frame not decoded yet → redraw when it arrives
   });
 
   window.addEventListener('load', () => ScrollTrigger.refresh());
