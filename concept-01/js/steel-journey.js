@@ -418,9 +418,10 @@ function init() {
     transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, fog: false,
     uniforms: { uA: { value: 0 } },
     vertexShader: 'varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }',
-    fragmentShader: 'varying vec2 vUv; uniform float uA; void main(){ float e = smoothstep(0.0,0.25,vUv.y)*smoothstep(1.0,0.6,vUv.y)*smoothstep(0.0,0.15,vUv.x)*smoothstep(1.0,0.85,vUv.x); gl_FragColor = vec4(vec3(0.85,0.02,0.12)*e*uA*0.55, 1.0); }',
+    fragmentShader: 'varying vec2 vUv; uniform float uA; void main(){ vec2 q = abs(vUv - 0.5) * 2.0; float e = pow(max(0.0, 1.0 - q.x*q.x), 2.0) * pow(max(0.0, 1.0 - q.y*q.y), 2.5); gl_FragColor = vec4(vec3(0.85,0.02,0.12)*e*uA*0.55, 1.0); }',
   });
   const scan = new THREE.Mesh(new THREE.PlaneGeometry(9, 6.5), scanMat); scan.rotation.y = Math.PI / 2; scan.position.y = 1.6; scene.add(scan);
+  scan.layers.set(1); // kept as the scan position anchor; the flat glow plane read as a hard-edged slab, the red light + floor line carry the scan
   const scanLine = new THREE.Mesh(new THREE.PlaneGeometry(0.04, 9), new THREE.MeshBasicMaterial({ color: 0xff2347, transparent: true, opacity: 0, fog: false, depthWrite: false }));
   scanLine.rotation.x = -Math.PI / 2; scanLine.position.y = -1.59; scene.add(scanLine);
 
@@ -521,12 +522,15 @@ function init() {
     [2.95, V(15.4, 1.0, 2.9), V(14.6, 0.6, 1.1)],
     [3.22, V(15.6, 4.2, 8.4), V(14.3, -0.2, 0.5)],
     [3.46, V(13.6, 2.7, 7.8), V(12.3, -0.1, 3.4)],
+    [3.62, V(12.9, 3.4, 5.7), V(12.2, -0.1, 3.8)],
     [3.78, V(12.6, 2.4, 6.9), V(11.6, 0.1, 3.5)],
     [4.02, V(7.2, 3.4, 7.6), V(13.6, 1.2, 0)],
-    [4.27, V(10.2, 3.1, 4.3), V(11.9, 1.75, 0.6)],
+    [4.16, V(9.0, 2.0, 3.9), V(13.2, 1.15, 0)],
+    [4.32, V(10.2, 3.1, 4.3), V(11.9, 1.75, 0.6)],
     [4.56, V(16.4, 1.35, 1.6), V(22.0, 1.25, 0)],
     [4.88, V(21.2, 3.6, 7.4), V(25.2, 1.6, 0)],
-    [5.26, V(24.6, 2.4, 7.8), V(28.0, 0.2, 0)],
+    [5.08, V(25.9, 3.4, 3.6), V(28.0, 1.6, 0)],
+    [5.3, V(24.6, 2.4, 7.8), V(28.0, 0.2, 0)],
     [5.66, V(30.8, 1.8, 6.0), V(28.0, -0.2, 0)],
     [6.02, V(32.8, 1.1, 5.4), V(28.2, -0.35, 0.2)],
     [6.5, V(25.0, 6.5, 17.0), V(17.0, 0, 0)],
@@ -594,7 +598,7 @@ function init() {
   // ================================================================== Higgsfield atmosphere videos
   const videos = [...stageEl.querySelectorAll('video[data-key]')].map(v => {
     const tex = new THREE.VideoTexture(v); tex.colorSpace = THREE.SRGBColorSpace; tex.generateMipmaps = false;
-    return { v, key: v.dataset.key, loaded: false, playing: false, tex, max: v.dataset.max ? +v.dataset.max : 0.4 };
+    return { v, key: v.dataset.key, loaded: false, playing: false, tex, max: CAPTURE ? 0 : (v.dataset.max ? +v.dataset.max : 0.4) };
   });
   const bgMat = new THREE.ShaderMaterial({
     depthTest: false, depthWrite: false, toneMapped: false, fog: false,
@@ -607,7 +611,7 @@ function init() {
       vec3 grade(vec3 c){ float l = dot(c, vec3(0.299,0.587,0.114)); return mix(vec3(l), c, 0.72) * 0.78; }
       void main(){
         vec2 p = vUv - vec2(0.64, 0.46); p.x *= uAspect;
-        vec3 col = mix(vec3(0.094,0.094,0.106), vec3(0.027), smoothstep(0.0, 0.95, length(p)));
+        vec3 col = mix(vec3(0.0072,0.0072,0.0082), vec3(0.0032,0.0032,0.0036), smoothstep(0.0, 0.95, length(p)));
         float va = 16.0/9.0; vec2 q = vUv - 0.5;
         if (uAspect > va) q.y *= va / uAspect; else q.x *= uAspect / va;
         q += 0.5;

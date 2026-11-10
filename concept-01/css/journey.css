@@ -100,7 +100,7 @@
   .journey-on .product-dock{padding:0}
   .journey-on .product-dock .dock-head{margin:0;padding:22svh 7% 0;min-height:60svh}
   .journey-on .product-dock .dock-list{display:flex;flex-direction:column}
-  .journey-on .product-dock .dock-item{min-height:105svh;display:flex;flex-direction:column;justify-content:flex-end;padding:0 7% 12svh;
+  .journey-on .product-dock .dock-item{min-height:170svh;display:flex;flex-direction:column;justify-content:flex-end;padding:0 7% 12svh;
     background:linear-gradient(0deg,rgba(8,8,9,.92) 0%,rgba(8,8,9,.6) 26%,rgba(8,8,9,0) 48%)!important;border-bottom:0}
   .journey-on .product-dock .dock-item.reveal{opacity:1;transform:none}
   .journey-on .product-dock .dock-item[href$="#armature"]{order:2}
@@ -132,3 +132,14 @@
 
 /* scroll-linked film: instant native scrolling, the film eases itself */
 html.journey-on{scroll-behavior:auto}
+
+/* ---------- home hero: keep the title clear of the nav on short screens ----------
+   The copy stays bottom-anchored as before, but in normal flow, so the hero grows
+   instead of the title sliding up under the navigation. Applies with or without the film. */
+.hero-home{display:flex;flex-direction:column;justify-content:flex-end}
+.hero-home .hero-copy{position:relative;left:auto;bottom:auto;margin:118px 0 16vh 8%}
+.hero-home h1{font-size:clamp(56px,min(9vw,14.5vh),138px)}
+@media(max-width:760px){
+  .hero-home .hero-copy{margin:104px 7% 10%;right:auto}
+  .hero-home h1{font-size:70px}
+}

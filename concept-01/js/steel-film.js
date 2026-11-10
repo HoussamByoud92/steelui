@@ -26,6 +26,8 @@ const lerp = (a, b, t) => a + (b - a) * t;
 const smooth = (a, b, x) => { const t = clamp01((x - a) / (b - a)); return t * t * (3 - 2 * t); };
 const fade = (T, a, b, f) => Math.min(smooth(a, a + f, T), 1 - smooth(b - f, b, T));
 const isMobile = () => window.matchMedia('(max-width: 760px)').matches;
+// frame index for film time T: the product chapter is rendered denser than the rest (meta.segs)
+const frameAt = (m, T) => { const segs = m.segs || [[0, m.step, 0]]; let k = segs.length - 1; while (k > 0 && T < segs[k][0]) k--; return Math.min(m.count - 1, Math.max(0, segs[k][2] + (T - segs[k][0]) / segs[k][1])); };
 
 if (root.classList.contains('journey-on') && journey && canvas) init().catch(disable);
 else disable('not enabled');
@@ -163,7 +165,7 @@ async function init() {
     const add = (st, T0, T1) => anchors.push({ st, T0, T1 });
     add(ScrollTrigger.create({ trigger: sections.intro, start: 'top bottom', end: 'bottom top' }), 0, 1);
     add(ScrollTrigger.create(desktop
-      ? { trigger: dock, start: 'top top', end: () => '+=' + Math.round(window.innerHeight * 2.6), pin: true, pinSpacing: true, anticipatePin: 1 }
+      ? { trigger: dock, start: 'top top', end: () => '+=' + Math.round(window.innerHeight * 5.2), pin: true, pinSpacing: true, anticipatePin: 1 }
       : { trigger: dock, start: 'top top', end: 'bottom bottom' }), 1, 6);
     add(ScrollTrigger.create({ trigger: sections.pin, start: 'top bottom', end: 'bottom bottom' }), 6, 7);
     add(ScrollTrigger.create({ trigger: sections.gallery, start: 'top bottom', end: 'bottom bottom' }), 7, 8);
@@ -196,7 +198,7 @@ async function init() {
   }
   function draw(T) {
     if (needsResize) resize();
-    const m = seq.meta, f = T / m.step, i0 = Math.min(seq.n - 1, Math.floor(f)), i1 = Math.min(seq.n - 1, i0 + 1), fr = f - i0;
+    const m = seq.meta, f = frameAt(m, T), i0 = Math.min(seq.n - 1, Math.floor(f)), i1 = Math.min(seq.n - 1, i0 + 1), fr = f - i0;
     const cw = canvas.width, ch = canvas.height;
     const s = Math.max(cw / m.width, ch / m.height), dw = m.width * s, dh = m.height * s, dx = (cw - dw) / 2, dy = (ch - dh) / 2;
     const a = seq.nearest(i0), b = seq.bitmaps.has(i1) ? i1 : -1;
@@ -230,7 +232,7 @@ async function init() {
     if (Math.abs(target - Tcur) < 0.0005) Tcur = target;
     if (target !== Tcur) lastDir = target > Tcur ? 1 : -1;
     if (!seq) return;
-    seq.pump(Tcur / seq.meta.step, lastDir);
+    seq.pump(frameAt(seq.meta, Tcur), lastDir);
     if (!stageVisible || Tcur === Tdrawn) return;
     updateCaptions(Tcur);
     if (draw(Tcur)) Tdrawn = Tcur; // exact frame not decoded yet → redraw when it arrives
