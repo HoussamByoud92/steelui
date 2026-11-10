@@ -51,56 +51,70 @@ async function init() {
   }
 
   function makeSequence(v, meta) {
-    const n = meta.count;
-    const blobs = new Array(n).fill(null), bitmaps = new Map(), fetching = new Set(), decoding = new Set();
-    let disposed = false, inflight = 0, decodes = 0;
-    const url = i => new URL(`${v}/${String(i).padStart(4, '0')}.webp`, BASE);
-    // coarse-to-fine global order, so any position has a nearby frame early
-    const order = [];
-    const seen = new Uint8Array(n);
-    for (const stride of [64, 32, 16, 8, 4, 2, 1]) for (let i = 0; i < n; i += stride) if (!seen[i]) { seen[i] = 1; order.push(i); }
-    let orderPos = 0;
-    const BACK = 12, AHEAD = 28, MAX_FETCH = 8, MAX_DECODE = 4;
+    const n = meta.count, chunks = meta.chunks;
+    const CH = chunks[0].ranges.length;
+    const chunkData = new Array(chunks.length).fill(null), chunkLoading = new Set();
+    const bitmaps = new Map(), decoding = new Set();
+    let disposed = false, decodes = 0;
+    const MAX_CHUNKS = 4, MAX_DECODE = 4, MAX_BITMAPS = 44, SPAN_SAMPLES = 24, AHEAD = 18;
+    const chunkOf = i => Math.min(chunks.length - 1, Math.floor(i / CH));
 
-    function fetchFrame(i) {
-      fetching.add(i); inflight++;
-      fetch(url(i)).then(r => r.blob()).then(b => { if (!disposed) blobs[i] = b; })
-        .catch(() => {}).finally(() => { fetching.delete(i); inflight--; });
+    function loadChunk(c) {
+      chunkLoading.add(c);
+      fetch(new URL(`${v}/${chunks[c].file}`, BASE)).then(r => { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); })
+        .then(buf => { if (!disposed) chunkData[c] = buf; })
+        .catch(() => {}).finally(() => { chunkLoading.delete(c); Tdrawn = NaN; });
     }
+    const hasData = i => !!chunkData[chunkOf(i)];
     function decodeFrame(i) {
+      const c = chunkOf(i), [off, len] = chunks[c].ranges[i - chunks[c].first];
       decoding.add(i); decodes++;
-      createImageBitmap(blobs[i]).then(bm => { if (disposed) bm.close(); else bitmaps.set(i, bm); })
+      createImageBitmap(new Blob([new Uint8Array(chunkData[c], off, len)], { type: 'image/webp' }))
+        .then(bm => { if (disposed) bm.close(); else bitmaps.set(i, bm); })
         .catch(() => {}).finally(() => { decoding.delete(i); decodes--; Tdrawn = NaN; });
     }
-    function pump(cur, dir) {
+    const want = [];
+    function pump(cur, target) {
       if (disposed) return;
-      const c = Math.round(cur);
-      // 1) frames around the playhead (biased in scroll direction), 2) global coarse-to-fine
-      const lo = c - (dir < 0 ? AHEAD : BACK), hi = c + (dir < 0 ? BACK : AHEAD);
-      for (let k = 0; k <= AHEAD && inflight < MAX_FETCH; k++) {
-        for (const i of [c + k * (dir < 0 ? -1 : 1), c - k * (dir < 0 ? -1 : 1)]) {
-          if (i >= 0 && i < n && !blobs[i] && !fetching.has(i) && inflight < MAX_FETCH) fetchFrame(i);
+      const c = Math.round(cur), t = Math.round(target), dir = t >= c ? 1 : -1;
+      // ---- downloads: chunks under the playhead, then toward the scroll target, then everything outward
+      if (chunkLoading.size < MAX_CHUNKS) {
+        const order = [chunkOf(c), chunkOf(t), chunkOf(Math.max(0, Math.min(n - 1, t + dir * CH)))];
+        for (let d = 1; d < chunks.length; d++) { order.push(chunkOf(c) + d * dir, chunkOf(c) - d * dir); }
+        for (const k of order) {
+          if (chunkLoading.size >= MAX_CHUNKS) break;
+          if (k >= 0 && k < chunks.length && !chunkData[k] && !chunkLoading.has(k)) loadChunk(k);
         }
       }
-      while (inflight < MAX_FETCH && orderPos < order.length) {
-        const i = order[orderPos++];
-        if (!blobs[i] && !fetching.has(i)) fetchFrame(i);
+      // ---- decodes: frames from the playhead to where the scroll is heading (sparse first when far), then a bit beyond
+      want.length = 0;
+      const span = Math.abs(t - c), stride = Math.max(1, Math.ceil(span / SPAN_SAMPLES));
+      for (let k = 0; k <= span; k += stride) want.push(c + k * dir);
+      if (stride > 1) for (let k = 1; k <= Math.min(span, 8); k++) want.push(c + k * dir);
+      for (let k = 1; k <= AHEAD; k++) want.push(t + k * dir);
+      want.push(t, c - dir, c - 2 * dir);
+      for (const i of want) {
+        if (decodes >= MAX_DECODE) break;
+        if (i >= 0 && i < n && !bitmaps.has(i) && !decoding.has(i) && hasData(i)) decodeFrame(i);
       }
-      // decode nearest first, release bitmaps outside the window
-      for (let k = 0; k <= AHEAD && decodes < MAX_DECODE; k++) {
-        for (const i of [c + k * (dir < 0 ? -1 : 1), c - k * (dir < 0 ? -1 : 1)]) {
-          if (i >= lo && i <= hi && i >= 0 && i < n && blobs[i] && !bitmaps.has(i) && !decoding.has(i) && decodes < MAX_DECODE) decodeFrame(i);
-        }
+      // ---- memory: keep the bitmaps closest to the playhead / target
+      if (bitmaps.size > MAX_BITMAPS) {
+        const lo = Math.min(c, t) - 3, hi = Math.max(c, t) + AHEAD;
+        const keys = [...bitmaps.keys()].sort((a, b) => {
+          const da = a >= lo && a <= hi ? 0 : Math.min(Math.abs(a - lo), Math.abs(a - hi));
+          const db = b >= lo && b <= hi ? 0 : Math.min(Math.abs(b - lo), Math.abs(b - hi));
+          return db - da;
+        });
+        for (let k = 0; k < keys.length && bitmaps.size > MAX_BITMAPS; k++) { bitmaps.get(keys[k]).close(); bitmaps.delete(keys[k]); }
       }
-      for (const [i, bm] of bitmaps) if (i < lo - 4 || i > hi + 4) { bm.close(); bitmaps.delete(i); }
     }
-    function nearest(i, maxD = 80) {
+    function nearest(i, maxD = 240) {
       if (bitmaps.has(i)) return i;
       for (let d = 1; d <= maxD; d++) { if (bitmaps.has(i - d)) return i - d; if (bitmaps.has(i + d)) return i + d; }
       return -1;
     }
     return {
-      meta, n, bitmaps, pump, nearest,
+      meta, n, bitmaps, pump, nearest, get chunksLoaded() { return chunkData.filter(Boolean).length; },
       dispose() { disposed = true; for (const bm of bitmaps.values()) bm.close(); bitmaps.clear(); },
     };
   }
@@ -232,7 +246,7 @@ async function init() {
     if (Math.abs(target - Tcur) < 0.0005) Tcur = target;
     if (target !== Tcur) lastDir = target > Tcur ? 1 : -1;
     if (!seq) return;
-    seq.pump(frameAt(seq.meta, Tcur), lastDir);
+    seq.pump(frameAt(seq.meta, Tcur), frameAt(seq.meta, target));
     if (!stageVisible || Tcur === Tdrawn) return;
     updateCaptions(Tcur);
     if (draw(Tcur)) Tdrawn = Tcur; // exact frame not decoded yet → redraw when it arrives
