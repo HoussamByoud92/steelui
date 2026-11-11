@@ -180,9 +180,28 @@ async function init() {
     if (!desktop) Object.values(captions).forEach(c => { if (c) { c.style.opacity = ''; c.style.visibility = ''; c.style.transform = ''; } });
     const add = (st, T0, T1) => anchors.push({ st, T0, T1 });
     add(ScrollTrigger.create({ trigger: sections.intro, start: 'top bottom', end: 'bottom top' }), 0, 1);
-    add(ScrollTrigger.create(desktop
-      ? { trigger: dock, start: 'top top', end: () => '+=' + Math.round(window.innerHeight * 9), pin: true, pinSpacing: true, anticipatePin: 1 }
-      : { trigger: dock, start: 'top top', end: 'bottom bottom' }), 1, 6);
+    if (desktop) {
+      // products chapter: one long pin, with most of the scroll given to each product's key moment
+      // [T0, T1, screens of scroll]
+      const SEG = [
+        [1.0, 1.38, 0.8],   // chapter intro
+        [1.38, 2.36, 1.8],  // rolling through the stands
+        [2.36, 3.0, 2.4],   // 01 finished bar, ribs close-up
+        [3.0, 3.9, 2.2],    // 02 cutting and bending
+        [3.9, 4.45, 2.4],   // 02 cage assembled
+        [4.45, 5.6, 2.2],   // 03 wire laying into rings
+        [5.6, 6.0, 2.2],    // 03 finished coil
+      ];
+      const total = SEG.reduce((s, x) => s + x[2], 0);
+      const pinSt = ScrollTrigger.create({ trigger: dock, start: 'top top', end: () => '+=' + Math.round(window.innerHeight * total), pin: true, pinSpacing: true, anticipatePin: 1 });
+      let acc = 0;
+      for (const [T0, T1, w] of SEG) {
+        const f0 = acc / total, f1 = (acc += w) / total;
+        add({ get start() { return pinSt.start + (pinSt.end - pinSt.start) * f0; }, get end() { return pinSt.start + (pinSt.end - pinSt.start) * f1; } }, T0, T1);
+      }
+    } else {
+      add(ScrollTrigger.create({ trigger: dock, start: 'top top', end: 'bottom bottom' }), 1, 6);
+    }
     add(ScrollTrigger.create({ trigger: sections.pin, start: 'top bottom', end: 'bottom bottom' }), 6, 7);
     add(ScrollTrigger.create({ trigger: sections.gallery, start: 'top bottom', end: 'bottom bottom' }), 7, 8);
     add(ScrollTrigger.create({ trigger: sections.index, start: 'top bottom', end: 'bottom bottom' }), 8, 9);
