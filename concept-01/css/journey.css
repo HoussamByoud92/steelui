@@ -54,7 +54,7 @@
 .journey-on .product-dock.is-pinned .dock-head{position:absolute;left:8%;top:22vh;max-width:560px;margin:0;will-change:opacity,transform}
 .journey-on .product-dock.is-pinned .dock-list{display:block;max-width:none;margin:0}
 .journey-on .product-dock.is-pinned .dock-item{position:absolute;left:8%;top:0;bottom:0;margin:auto 0;height:fit-content;width:min(440px,36vw);min-height:0;padding:0;display:block;opacity:0;visibility:hidden;will-change:opacity,transform}
-.journey-on .product-dock.is-pinned .dock-num{display:block;font-size:clamp(110px,min(13vw,24vh),210px);line-height:.8;letter-spacing:-.06em;color:transparent;-webkit-text-stroke:2px rgba(242,240,235,.9);margin-bottom:18px}
+.journey-on .product-dock.is-pinned .dock-num{display:block;font-size:clamp(110px,min(13vw,24vh),210px);line-height:.8;letter-spacing:-.075em;font-weight:700;color:#f7f5f0;-webkit-text-stroke:0;margin-bottom:18px}
 .journey-on .product-dock.is-pinned .dock-item h3{font-size:clamp(44px,5.2vw,82px);line-height:.88;letter-spacing:-.075em;margin:0 0 18px}
 .journey-on .product-dock.is-pinned .dock-item p{font-size:15px;line-height:1.7;max-width:360px;opacity:.82}
 .journey-on .product-dock.is-pinned .dock-arrow{display:inline-flex;align-items:center;justify-content:center;margin-top:22px;width:46px;height:46px;border-radius:50%;background:var(--red);font-size:18px;pointer-events:auto}
@@ -105,7 +105,7 @@
   .journey-on .product-dock .dock-item.reveal{opacity:1;transform:none}
   .journey-on .product-dock .dock-item[href$="#armature"]{order:2}
   .journey-on .product-dock .dock-item[href$="#wire"]{order:3}
-  .journey-on .product-dock .dock-num{font-size:96px;margin-bottom:12px;-webkit-text-stroke:1.6px rgba(242,240,235,.9)}
+  .journey-on .product-dock .dock-num{font-size:96px;margin-bottom:12px;font-weight:700;letter-spacing:-.075em;color:#f7f5f0;-webkit-text-stroke:0}
   .journey-on .product-dock .dock-item h3{font-size:44px;line-height:.9}
   .journey-on .product-dock .dock-item p{font-size:14px;max-width:none}
   .journey-on .product-dock .dock-arrow{display:none}
