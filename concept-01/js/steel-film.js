@@ -175,12 +175,11 @@ async function init() {
   function buildTriggers() {
     anchors.length = 0;
     const desktop = !isMobile();
-    pinned = desktop;
-    dock.classList.toggle('is-pinned', desktop);
-    if (!desktop) Object.values(captions).forEach(c => { if (c) { c.style.opacity = ''; c.style.visibility = ''; c.style.transform = ''; } });
+    pinned = true; // pinned stage on phones too: title block on top, film below
+    dock.classList.add('is-pinned');
     const add = (st, T0, T1) => anchors.push({ st, T0, T1 });
     add(ScrollTrigger.create({ trigger: sections.intro, start: 'top bottom', end: 'bottom top' }), 0, 1);
-    if (desktop) {
+    {
       // products chapter: one long pin, with most of the scroll given to each product's key moment
       // [T0, T1, screens of scroll]
       const SEG = [
@@ -199,8 +198,6 @@ async function init() {
         const f0 = acc / total, f1 = (acc += w) / total;
         add({ get start() { return pinSt.start + (pinSt.end - pinSt.start) * f0; }, get end() { return pinSt.start + (pinSt.end - pinSt.start) * f1; } }, T0, T1);
       }
-    } else {
-      add(ScrollTrigger.create({ trigger: dock, start: 'top top', end: 'bottom bottom' }), 1, 6);
     }
     add(ScrollTrigger.create({ trigger: sections.pin, start: 'top bottom', end: 'bottom bottom' }), 6, 7);
     add(ScrollTrigger.create({ trigger: sections.gallery, start: 'top bottom', end: 'bottom bottom' }), 7, 8);
@@ -236,7 +233,11 @@ async function init() {
     ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = settled ? 'high' : 'medium';
     const m = seq.meta, fRaw = frameAt(m, T), f = settled ? Math.round(fRaw) : fRaw, i0 = Math.min(seq.n - 1, Math.floor(f + 1e-6)), i1 = Math.min(seq.n - 1, i0 + 1), fr = Math.max(0, f - i0);
     const cw = canvas.width, ch = canvas.height;
-    const s = Math.max(cw / m.width, ch / m.height), dw = m.width * s, dh = m.height * s, dx = (cw - dw) / 2, dy = (ch - dh) / 2;
+    const s = Math.max(cw / m.width, ch / m.height), dw = m.width * s, dh = m.height * s, dx = (cw - dw) / 2;
+    // phones: during the products chapter the film sits below the pinned title block
+    const mobShift = isMobile() ? smooth(0.85, 1.15, T) * (1 - smooth(5.85, 6.2, T)) : 0;
+    const dy = (ch - dh) / 2 + mobShift * ch * 0.24;
+    if (mobShift > 0) { ctx.fillStyle = '#0b0b0c'; ctx.fillRect(0, 0, cw, dy); }
     const a = seq.nearest(i0), b = seq.bitmaps.has(i1) ? i1 : -1;
     if (a < 0) return false;
     ctx.globalAlpha = 1;
@@ -258,7 +259,8 @@ async function init() {
       // a label that would drop its text into the band flips to point upward instead
       const down = l.down && py + 90 < limit - 40;
       if (down !== l.isDown) { l.isDown = down; l.el.classList.toggle('is-down', down); }
-      const keep = 1 - smooth(limit - 40, limit, py + (down ? 90 : 0));
+      let keep = 1 - smooth(limit - 40, limit, py + (down ? 90 : 0));
+      if (mobShift > 0) keep *= 1 - mobShift * (1 - smooth(H * 0.5, H * 0.58, py)); // not over the title block
       l.el.style.opacity = (op * keep).toFixed(3);
       const left = u > 0.675; if (left !== l.left) { l.left = left; l.el.classList.toggle('is-left', left); }
       l.el.style.transform = `translate3d(${px.toFixed(1)}px,${py.toFixed(1)}px,0)`;
