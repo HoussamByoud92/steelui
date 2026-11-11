@@ -134,7 +134,7 @@ async function init() {
       if (l.v) { const em = document.createElement('em'); em.textContent = l.v; span.append(em); }
       el.append(document.createElement('i'), span);
       labelLayer.append(el);
-      return { el, left: false, shown: false };
+      return { el, left: false, shown: false, down: l.side === 'down', isDown: l.side === 'down' };
     });
   }
 
@@ -181,7 +181,7 @@ async function init() {
     const add = (st, T0, T1) => anchors.push({ st, T0, T1 });
     add(ScrollTrigger.create({ trigger: sections.intro, start: 'top bottom', end: 'bottom top' }), 0, 1);
     add(ScrollTrigger.create(desktop
-      ? { trigger: dock, start: 'top top', end: () => '+=' + Math.round(window.innerHeight * 5.2), pin: true, pinSpacing: true, anticipatePin: 1 }
+      ? { trigger: dock, start: 'top top', end: () => '+=' + Math.round(window.innerHeight * 9), pin: true, pinSpacing: true, anticipatePin: 1 }
       : { trigger: dock, start: 'top top', end: 'bottom bottom' }), 1, 6);
     add(ScrollTrigger.create({ trigger: sections.pin, start: 'top bottom', end: 'bottom bottom' }), 6, 7);
     add(ScrollTrigger.create({ trigger: sections.gallery, start: 'top bottom', end: 'bottom bottom' }), 7, 8);
@@ -233,9 +233,16 @@ async function init() {
       if (!p) { if (l.shown) { l.shown = false; l.el.style.opacity = '0'; } return; }
       const op = lerp(p[0], q ? q[0] : 0, fr), u = lerp(p[1], q[1], fr), v = lerp(p[2], q[2], fr);
       l.shown = true;
-      l.el.style.opacity = op.toFixed(3);
+      const px = fit.ox + u * m.width * sc, py = fit.oy + v * m.height * sc;
+      // keep labels out of the bottom band where the step rail / captions sit
+      const limit = H * (pinned ? 0.76 : 0.86);
+      // a label that would drop its text into the band flips to point upward instead
+      const down = l.down && py + 90 < limit - 40;
+      if (down !== l.isDown) { l.isDown = down; l.el.classList.toggle('is-down', down); }
+      const keep = 1 - smooth(limit - 40, limit, py + (down ? 90 : 0));
+      l.el.style.opacity = (op * keep).toFixed(3);
       const left = u > 0.675; if (left !== l.left) { l.left = left; l.el.classList.toggle('is-left', left); }
-      l.el.style.transform = `translate3d(${(fit.ox + u * m.width * sc).toFixed(1)}px,${(fit.oy + v * m.height * sc).toFixed(1)}px,0)`;
+      l.el.style.transform = `translate3d(${px.toFixed(1)}px,${py.toFixed(1)}px,0)`;
     });
     stageEl.style.setProperty('--stage-dim', lerp(m.dim[i0] || 0, m.dim[i1] || 0, fr).toFixed(3));
     return a === i0;
