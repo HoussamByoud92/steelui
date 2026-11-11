@@ -157,3 +157,16 @@ html.journey-on{scroll-behavior:auto}
 
 /* no decorative dash before small kickers */
 .intro-body .intro-kicker:before{content:none}
+
+/* "Le standard" pin notes on tablets: a tilted 2x2 board instead of the overlapping desktop scatter */
+@media (min-width:761px) and (max-width:1199px){
+  .pinboard{min-height:1180px}
+  .pin-note{width:min(40%,340px);min-height:290px;padding:28px}
+  .pin-note h3{font-size:30px;margin-top:62px}
+  .pin-note p{display:block;font-size:13px}
+  .pin-note.one{left:7%;top:23%;right:auto}
+  .pin-note.two{left:53%;top:29%;right:auto}
+  .pin-note.three{left:9%;top:57%;right:auto}
+  .pin-note.four{left:54%;top:63%;right:auto}
+  .journey-on .pin-note{background:#18181b}
+}
