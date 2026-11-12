@@ -58,7 +58,41 @@ async function init() {
     const chunkData = new Array(chunks.length).fill(null), chunkLoading = new Set();
     const bitmaps = new Map(), decoding = new Set();
     let disposed = false, decodes = 0;
-    const MAX_CHUNKS = 4, MAX_DECODE = 4, MAX_BITMAPS = 44, SPAN_SAMPLES = 24, AHEAD = 18;
+    const MAX_CHUNKS = 6, MAX_DECODE = 4, MAX_BITMAPS = 44, SPAN_SAMPLES = 24, AHEAD = 18;
+
+    // ---- low-res preview track: one small file, loaded first; shown whenever the sharp frame is not ready
+    const pv = meta.preview, pvBitmaps = new Map(), pvDecoding = new Set();
+    let pvData = null, pvDecodes = 0;
+    if (pv) fetch(new URL(`${v}/${pv.file}`, BASE)).then(r => r.ok ? r.arrayBuffer() : null).then(buf => { if (!disposed) { pvData = buf; Tdrawn = NaN; } }).catch(() => {});
+    function pumpPreview(c, t) {
+      if (!pvData) return;
+      const pc = Math.round(c / pv.every), pt = Math.round(t / pv.every), dir = pt >= pc ? 1 : -1, last = pv.ranges.length - 1;
+      // where the scroll is heading first, then around the playhead, then samples in between
+      const order = [], span = Math.abs(pt - pc), stride = Math.max(1, Math.ceil(span / 16));
+      for (let k = -2; k <= 8; k++) order.push(pt + k * dir);
+      for (let k = -3; k <= 4; k++) order.push(pc + k * dir);
+      for (let k = stride; k < span; k += stride) order.push(pc + k * dir);
+      for (let k = 1; k < span; k++) order.push(pt - k * dir);
+      for (const p of order) {
+        if (pvDecodes >= 3) break;
+        if (p < 0 || p > last || pvBitmaps.has(p) || pvDecoding.has(p)) continue;
+        const [off, len] = pv.ranges[p];
+        pvDecoding.add(p); pvDecodes++;
+        createImageBitmap(new Blob([new Uint8Array(pvData, off, len)], { type: 'image/webp' }))
+          .then(bm => { if (disposed) bm.close(); else pvBitmaps.set(p, bm); })
+          .catch(() => {}).finally(() => { pvDecoding.delete(p); pvDecodes--; Tdrawn = NaN; });
+      }
+      if (pvBitmaps.size > 90) {
+        const lo = Math.min(pc, pt) - 8, hi = Math.max(pc, pt) + 14;
+        for (const [p, bm] of pvBitmaps) if (p < lo || p > hi) { bm.close(); pvBitmaps.delete(p); }
+      }
+    }
+    function preview(f) {
+      if (!pv) return null;
+      const p = Math.round(f / pv.every);
+      for (let d = 0; d <= 6; d++) { if (pvBitmaps.has(p - d)) return pvBitmaps.get(p - d); if (pvBitmaps.has(p + d)) return pvBitmaps.get(p + d); }
+      return null;
+    }
     const chunkOf = i => Math.min(chunks.length - 1, Math.floor(i / CH));
 
     function loadChunk(c) {
@@ -79,12 +113,15 @@ async function init() {
     function pump(cur, target) {
       if (disposed) return;
       const c = Math.round(cur), t = Math.round(target), dir = t >= c ? 1 : -1;
+      pumpPreview(c, t);
       // ---- downloads: chunks under the playhead, then toward the scroll target, then everything outward
-      if (chunkLoading.size < MAX_CHUNKS) {
+      // until the preview track is in, only fetch the chunk under the playhead (the preview gets the bandwidth)
+      const maxChunks = pv && !pvData ? 1 : MAX_CHUNKS;
+      if (chunkLoading.size < maxChunks) {
         const order = [chunkOf(c), chunkOf(t), chunkOf(Math.max(0, Math.min(n - 1, t + dir * CH)))];
         for (let d = 1; d < chunks.length; d++) { order.push(chunkOf(c) + d * dir, chunkOf(c) - d * dir); }
         for (const k of order) {
-          if (chunkLoading.size >= MAX_CHUNKS) break;
+          if (chunkLoading.size >= maxChunks) break;
           if (k >= 0 && k < chunks.length && !chunkData[k] && !chunkLoading.has(k)) loadChunk(k);
         }
       }
@@ -116,8 +153,9 @@ async function init() {
       return -1;
     }
     return {
-      meta, n, bitmaps, pump, nearest, get chunksLoaded() { return chunkData.filter(Boolean).length; },
-      dispose() { disposed = true; for (const bm of bitmaps.values()) bm.close(); bitmaps.clear(); },
+      meta, n, bitmaps, pump, nearest, preview, get chunksLoaded() { return chunkData.filter(Boolean).length; },
+      get previewReady() { return !!pvData; }, get previewDecoded() { return pvBitmaps.size; },
+      dispose() { disposed = true; for (const bm of bitmaps.values()) bm.close(); bitmaps.clear(); for (const bm of pvBitmaps.values()) bm.close(); pvBitmaps.clear(); },
     };
   }
 
@@ -238,11 +276,18 @@ async function init() {
     const mobShift = isMobile() ? smooth(0.85, 1.15, T) * (1 - smooth(5.85, 6.2, T)) : 0;
     const dy = (ch - dh) / 2 + mobShift * ch * 0.24;
     if (mobShift > 0) { ctx.fillStyle = '#0b0b0c'; ctx.fillRect(0, 0, cw, dy); }
-    const a = seq.nearest(i0), b = seq.bitmaps.has(i1) ? i1 : -1;
-    if (a < 0) return false;
+    // sharp frame if it (or a very close one) is ready; otherwise the low-res preview, so the film never freezes
+    let a = seq.nearest(i0, 3);
+    const b = seq.bitmaps.has(i1) ? i1 : -1;
     ctx.globalAlpha = 1;
-    ctx.drawImage(seq.bitmaps.get(a), dx, dy, dw, dh);
-    if (a === i0 && b >= 0 && fr > 0.02) { ctx.globalAlpha = fr; ctx.drawImage(seq.bitmaps.get(b), dx, dy, dw, dh); ctx.globalAlpha = 1; }
+    if (a >= 0) {
+      ctx.drawImage(seq.bitmaps.get(a), dx, dy, dw, dh);
+      if (a === i0 && b >= 0 && fr > 0.02) { ctx.globalAlpha = fr; ctx.drawImage(seq.bitmaps.get(b), dx, dy, dw, dh); ctx.globalAlpha = 1; }
+    } else {
+      const pv = seq.preview(f);
+      if (pv) { ctx.imageSmoothingQuality = 'high'; ctx.drawImage(pv, dx, dy, dw, dh); }
+      else { a = seq.nearest(i0); if (a < 0) return false; ctx.drawImage(seq.bitmaps.get(a), dx, dy, dw, dh); }
+    }
 
     // labels + dim follow the same frame position (CSS px)
     const sc = s / (cw / W);
