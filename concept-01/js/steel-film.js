@@ -60,13 +60,28 @@ async function init() {
     let disposed = false, decodes = 0;
     const MAX_CHUNKS = 6, MAX_DECODE = 4, MAX_BITMAPS = 44, SPAN_SAMPLES = 24, AHEAD = 18;
 
-    // ---- low-res preview track: one small file, loaded first; shown whenever the sharp frame is not ready
+    // ---- low-res preview track in small parts: the part under the playhead / scroll target loads first,
+    //      and preview frames are shown whenever the sharp frame is not ready
     const pv = meta.preview, pvBitmaps = new Map(), pvDecoding = new Set();
-    let pvData = null, pvDecodes = 0;
-    if (pv) fetch(new URL(`${v}/${pv.file}`, BASE)).then(r => r.ok ? r.arrayBuffer() : null).then(buf => { if (!disposed) { pvData = buf; Tdrawn = NaN; } }).catch(() => {});
+    const pvParts = pv ? new Array(pv.parts.length).fill(null) : [], pvLoading = new Set();
+    let pvDecodes = 0;
+    const partOf = p => Math.min(pvParts.length - 1, Math.floor(p / pv.per));
+    function loadPart(k) {
+      pvLoading.add(k);
+      fetch(new URL(`${v}/${pv.parts[k].file}`, BASE)).then(r => r.ok ? r.arrayBuffer() : null)
+        .then(buf => { if (!disposed && buf) pvParts[k] = buf; }).catch(() => {}).finally(() => { pvLoading.delete(k); Tdrawn = NaN; });
+    }
+    // the parts that matter right now: under the playhead and under the scroll target
+    const pvNeeded = (c, t) => pv ? [partOf(Math.round(c / pv.every)), partOf(Math.round(t / pv.every))] : [];
+    const pvReadyFor = (c, t) => pvNeeded(c, t).every(k => pvParts[k]);
     function pumpPreview(c, t) {
-      if (!pvData) return;
-      const pc = Math.round(c / pv.every), pt = Math.round(t / pv.every), dir = pt >= pc ? 1 : -1, last = pv.ranges.length - 1;
+      if (!pv) return;
+      const pc = Math.round(c / pv.every), pt = Math.round(t / pv.every), dir = pt >= pc ? 1 : -1, last = pv.count - 1;
+      if (pvLoading.size < 2) {
+        const want = [partOf(pc), partOf(pt), partOf(Math.min(last, Math.max(0, pt + dir * pv.per)))];
+        for (let d = 1; d < pvParts.length; d++) want.push(partOf(pc) + d * dir, partOf(pc) - d * dir);
+        for (const k of want) { if (pvLoading.size >= 2) break; if (k >= 0 && k < pvParts.length && !pvParts[k] && !pvLoading.has(k)) loadPart(k); }
+      }
       // where the scroll is heading first, then around the playhead, then samples in between
       const order = [], span = Math.abs(pt - pc), stride = Math.max(1, Math.ceil(span / 16));
       for (let k = -2; k <= 8; k++) order.push(pt + k * dir);
@@ -76,9 +91,10 @@ async function init() {
       for (const p of order) {
         if (pvDecodes >= 3) break;
         if (p < 0 || p > last || pvBitmaps.has(p) || pvDecoding.has(p)) continue;
-        const [off, len] = pv.ranges[p];
+        const k = partOf(p); if (!pvParts[k]) continue;
+        const [off, len] = pv.parts[k].ranges[p - pv.parts[k].first];
         pvDecoding.add(p); pvDecodes++;
-        createImageBitmap(new Blob([new Uint8Array(pvData, off, len)], { type: 'image/webp' }))
+        createImageBitmap(new Blob([new Uint8Array(pvParts[k], off, len)], { type: 'image/webp' }))
           .then(bm => { if (disposed) bm.close(); else pvBitmaps.set(p, bm); })
           .catch(() => {}).finally(() => { pvDecoding.delete(p); pvDecodes--; Tdrawn = NaN; });
       }
@@ -116,7 +132,7 @@ async function init() {
       pumpPreview(c, t);
       // ---- downloads: chunks under the playhead, then toward the scroll target, then everything outward
       // until the preview track is in, only fetch the chunk under the playhead (the preview gets the bandwidth)
-      const maxChunks = pv && !pvData ? 1 : MAX_CHUNKS;
+      const maxChunks = pv && !pvReadyFor(c, t) ? 1 : MAX_CHUNKS;
       if (chunkLoading.size < maxChunks) {
         const order = [chunkOf(c), chunkOf(t), chunkOf(Math.max(0, Math.min(n - 1, t + dir * CH)))];
         for (let d = 1; d < chunks.length; d++) { order.push(chunkOf(c) + d * dir, chunkOf(c) - d * dir); }
@@ -154,7 +170,7 @@ async function init() {
     }
     return {
       meta, n, bitmaps, pump, nearest, preview, get chunksLoaded() { return chunkData.filter(Boolean).length; },
-      get previewReady() { return !!pvData; }, get previewDecoded() { return pvBitmaps.size; },
+      get previewReady() { return pvParts.filter(Boolean).length; }, get previewDecoded() { return pvBitmaps.size; },
       dispose() { disposed = true; for (const bm of bitmaps.values()) bm.close(); bitmaps.clear(); for (const bm of pvBitmaps.values()) bm.close(); pvBitmaps.clear(); },
     };
   }
