@@ -219,3 +219,9 @@ img[src*="11.11.55"]{content:url('../../assets/higgsfield/custom-sections.png')}
 
 /* tablets: hamburger menu like phones, the "Parler à un expert" button stays */
 @media(min-width:761px) and (max-width:1199px){.site-nav .links{display:none}.menu-toggle{display:block;margin-left:16px}.site-nav.open .links{display:flex;position:absolute;top:86px;left:0;right:0;padding:26px;background:#101010;flex-direction:column;gap:20px;border:1px solid var(--line);border-top:0}.site-nav.open .links a{font-size:13px}}
+
+/* Header: fixed, hides on scroll down, reappears on scroll up */
+.site-nav{position:fixed;top:0;transition:translate .45s cubic-bezier(.22,1,.36,1),background-color .35s ease,border-color .35s ease;will-change:translate}
+.site-nav:before{content:'';position:absolute;z-index:-1;top:0;bottom:0;left:-100vw;right:-100vw;background:rgba(14,14,14,.9);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);opacity:0;transition:opacity .35s ease;pointer-events:none}.site-nav.is-solid:before{opacity:1}.site-nav.is-solid{border-bottom-color:transparent}
+.site-nav.is-hidden{translate:0 -100%}
+@media(prefers-reduced-motion:reduce){.site-nav{transition:none}}
